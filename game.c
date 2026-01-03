@@ -461,7 +461,7 @@ bool tick(Game *game, u16 ch) {
     if (game->falling_tm.gravity_timer == 0) {
         game->falling_tm.gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
         game->gravity_acted = true;
-        if (tm_is_on_floor(game)) {
+        if (!tmf_mv(game, DOWN)) {
             tm_set(game);
             if (!tm_spawn(game)) { 
                 sleep(1); 
