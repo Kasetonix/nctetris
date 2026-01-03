@@ -25,7 +25,17 @@
 #define PREV_CHAR '*'
 
 #define FRAMES_BEFORE_SET (FRAMERATE / 2)
+#define BLINK_FRAMES 5
 #define LINES_PER_LEVEL 10
+
+#define CH_MV_LEFT KEY_LEFT
+#define CH_MV_RIGHT KEY_RIGHT
+#define CH_ROTATE KEY_UP
+#define CH_SOFT_DROP KEY_DOWN 
+#define CH_HARD_DROP ' '
+#define CH_HOLD 'c'
+#define CH_QUIT 'q'
+#define CH_PAUSE 'p'
 
 typedef struct Vec {
     i16 y;
@@ -58,6 +68,7 @@ typedef struct Game {
     u8 field[FIELD_Y][FIELD_X];
     bool gravity_acted;
     Vec block_size;
+    bool paused;
 } Game;
 
 typedef enum Tm_Type {
@@ -70,6 +81,7 @@ typedef enum Direction {
 
 
 Tetromino tm_create_rand(Vec block_size);
+bool tm_is_on_floor(Game *game);
 void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview);
 void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm);
 void tm_draw_preview(WINDOW *win, Vec block_size, Game *game, Tetromino *tm);

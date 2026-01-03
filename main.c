@@ -10,6 +10,7 @@
 int main() {
     bool run = true;
     u16 ch;
+    u64 frame = 0;
     Windim scrdim;
     time_t c_time;
     struct timespec req;
@@ -25,7 +26,8 @@ int main() {
         .score = 0,
         .lines_cleared = 0,
         .gravity_acted = false,
-        .block_size = { 1, 2 }
+        .block_size = { 1, 2 },
+        .paused = false
     };
 
     scrdim = get_scrdim();
@@ -53,6 +55,7 @@ int main() {
     c_time = clock();
 
     while (run) {
+        frame++;
         c_time = clock();
 
         if (!tick(&game, ch))
@@ -64,12 +67,16 @@ int main() {
 
         // Drawing
         field_draw(win[WIN_FIELD], game.block_size, &game);
-        tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.falling_tm);
-        tm_draw(win[WIN_FIELD], game.block_size, &game.falling_tm, false);
         tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.held_tm);
         tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.next_tm);
         print_score(win[WIN_SCORE], game.score);
         print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
+
+        // Blink when on the floor
+        if (!(tm_is_on_floor(&game) && frame % BLINK_FRAMES == 0)) {
+            tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.falling_tm);
+            tm_draw(win[WIN_FIELD], game.block_size, &game.falling_tm, false);
+        }
 
         // Borders
         border_draw(win[WIN_FIELD], WINT_FIELD);
@@ -80,6 +87,10 @@ int main() {
 
         doupdate();
         ch = getch();
+
+        if (ch == CH_PAUSE) {
+
+        }
 
         req.tv_nsec = FRAMETIME_NS - ns(time_since(c_time));
         nanosleep(&req, NULL);

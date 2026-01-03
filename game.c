@@ -159,7 +159,7 @@ static bool tm_fits(Game *game, Tetromino *tm, Vec offset) {
 }
 
 // Checks if the falling tetromino is on the floor
-static bool tm_is_on_floor(Game *game) {
+bool tm_is_on_floor(Game *game) {
     return !tm_fits(game, &game->falling_tm, (Vec) { 1, 0 });
 }
 
@@ -432,13 +432,13 @@ bool tick(Game *game, u16 ch) {
 
     // Input handling
     switch (ch) {
-        case KEY_LEFT:  tmf_mv(game, LEFT); break; 
-        case KEY_RIGHT: tmf_mv(game, RIGHT); break;
-        case KEY_UP:    tm_rotate(game); break;
-        case 'z':       tm_hold(game); break;
-        case 'q':       return false; break;
+        case CH_MV_LEFT:  tmf_mv(game, LEFT); break; 
+        case CH_MV_RIGHT: tmf_mv(game, RIGHT); break;
+        case CH_ROTATE:   tm_rotate(game); break;
+        case CH_HOLD:     tm_hold(game); break;
+        case CH_QUIT:     return false; break;
 
-        case 'x':
+        case CH_HARD_DROP:
             hard_drop(game);
             tm_set(game);
             if (!tm_spawn(game)) { 
@@ -447,9 +447,8 @@ bool tick(Game *game, u16 ch) {
             }
             break;
 
-        case KEY_DOWN:  
-            if (!tmf_mv(game, DOWN)) 
-                tm_set(game); 
+        case CH_SOFT_DROP:  
+            tmf_mv(game, DOWN); 
             if (game->gravity_acted && tm_is_on_floor(game))
                 game->falling_tm.gravity_timer = FRAMES_BEFORE_SET;
             game->score++;

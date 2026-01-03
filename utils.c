@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <locale.h>
 #include <time.h>
 #include "utils.h"
 
@@ -6,6 +7,7 @@
 
 // initializes the ncurses library 
 void init_ncurses() {
+    setlocale(LC_ALL, "");
     initscr();
     cbreak();
     noecho();
