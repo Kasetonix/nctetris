@@ -72,7 +72,7 @@ typedef struct Game {
 } Game;
 
 typedef enum Tm_Type {
-    TM_I, TM_O, TM_T, TM_J, TM_L, TM_S, TM_Z
+    TM_O, TM_Z, TM_S, TM_L, TM_J, TM_T, TM_I
 } Tm_Type;
 
 typedef enum Direction {
