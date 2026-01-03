@@ -22,7 +22,6 @@ int main() {
     init_ncurses();
 
     Game game = {
-        .frame = 0,
         .score = 0,
         .lines_cleared = 0,
         .gravity_acted = false,

@@ -52,59 +52,77 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
 
 // Gravity level depending on game level
 const u8 GRAVITY[LVL_NUM] = {
-  // 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+//   0   1   2   3   4   5   6   7   8   9
     50, 48, 46, 44, 42, 40, 38, 36, 34, 32,
-  // 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+//  10  11  12  13  14  15  16  17  18  19
     30, 28, 26, 24, 22, 20, 16, 12,  8,  4
 };
+
+// Calculates the bounding box for tetrominoes
+static BoundingBox calc_bbox(Tetromino *tm) {
+    BoundingBox bbox =  { 
+        .top = TM_SIZE - 1,
+        .left = TM_SIZE - 1,
+        .right = 0,
+        .bottom = 0
+    };
+
+    for (u8 i = 0; i < TM_SIZE; i++) {
+        if (tm->block[i].x < bbox.left)
+            bbox.left = tm->block[i].x;
+        if (tm->block[i].x > bbox.right)
+            bbox.right = tm->block[i].x;
+        if (tm->block[i].y < bbox.top)
+            bbox.top = tm->block[i].y;
+        if (tm->block[i].y > bbox.bottom)
+            bbox.bottom = tm->block[i].y;
+    }
+
+    return bbox;
+}
 
 // Calculates the correct origin for drawing tetrominos in Hold and Next windows
 static Vec calc_nh_pos(Vec block_size, Tetromino *tm) {
     Vec nh_pos = { BORDER_THICKNESS, BORDER_THICKNESS };
-    Vec tm_min_corner = { TM_SIZE - 1, TM_SIZE - 1 }, tm_max_corner = { 0, 0 };
     u8 margin_h, margin_v;
 
-    // Getting the bounding box of a tetromino
-    for (u8 i = 0; i < TM_SIZE; i++) {
-        if (tm->block[i].x < tm_min_corner.x)
-            tm_min_corner.x = tm->block[i].x;
-        if (tm->block[i].x > tm_max_corner.x)
-            tm_max_corner.x = tm->block[i].x;
-        if (tm->block[i].y < tm_min_corner.y)
-            tm_min_corner.y = tm->block[i].y;
-        if (tm->block[i].y > tm_max_corner.y)
-            tm_max_corner.y = tm->block[i].y;
-    }
+    // Calculating the margin size in drawing coordinates
+    margin_h = (TM_SIZE - (tm->bbox.right - tm->bbox.left + 1)) * block_size.x / 2;
+    margin_v = (TM_SIZE - (tm->bbox.bottom - tm->bbox.top + 1)) * block_size.y / 2;
 
-    // Converting to drawing coordinates
-    tm_min_corner.x = tm_min_corner.x * block_size.x;
-    tm_min_corner.y = tm_min_corner.y * block_size.y;
-    tm_max_corner.x = (tm_max_corner.x + 1) * block_size.x - 1;
-    tm_max_corner.y = (tm_max_corner.y + 1) * block_size.y - 1;
-
-    // Calculating the margin size
-    margin_h = (block_size.x * TM_SIZE - (tm_max_corner.x - tm_min_corner.x + 1)) / 2;
-    margin_v = (block_size.y * TM_SIZE - (tm_max_corner.y - tm_min_corner.y + 1)) / 2;
-
-    nh_pos.x += margin_h - tm_min_corner.x;
-    nh_pos.y += margin_v - tm_min_corner.y;
+    nh_pos.x += margin_h - tm->bbox.left * block_size.x;
+    nh_pos.y += margin_v - tm->bbox.top * block_size.y;
 
     return nh_pos;
+}
+
+static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation, u8 gravity_timer) {
+    tm->type = type;
+    tm->orientation = orientation;
+    tm->pos = (Vec) { pos.y, pos.x };
+    tm->gravity_timer = gravity_timer;
+
+    for (u8 i = 0; i < TM_SIZE; i++) {
+        tm->block[i] = TM_BLOCKS[tm->type][tm->orientation][i];
+    }
+
+    tm->bbox = calc_bbox(tm);
+    tm->pos_nh = calc_nh_pos(block_size, tm);
 }
 
 // Generates a random tetromino
 Tetromino tm_create_rand(Vec block_size) {
     Tetromino tm;
-    tm.type = rand() % TM_NUM;
-    tm.orientation = 0;
-    tm.pos = (Vec) { 0, 0 }; 
-
-    for (u8 i = 0; i < TM_SIZE; i++) {
-        tm.block[i] = TM_BLOCKS[tm.type][tm.orientation][i];
-    }
-
-    tm.pos_nh = calc_nh_pos(block_size, &tm);
+    tm_get_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0, GRAVITY[0]);
+    tm.pos.x = (FIELD_X - (tm.bbox.right - tm.bbox.left + 1)) / 2;
     return tm;
+}
+
+// Returns a rotated tetromino without any checks
+Tetromino tm_rotated(Vec block_size, Tetromino *tm) {
+    Tetromino tm_r;
+    tm_get_data(block_size, &tm_r, tm->pos, tm->type, (tm->orientation + 1) % TM_ORIENT, tm->gravity_timer);
+    return tm_r; 
 }
 
 // Checks whether a tetromino fits in a given position
@@ -140,12 +158,15 @@ static bool tm_fits(Game *game, Tetromino *tm, Vec offset) {
     return true;
 }
 
+// Checks if the falling tetromino is on the floor
+static bool tm_is_on_floor(Game *game) {
+    return !tm_fits(game, &game->falling_tm, (Vec) { 1, 0 });
+}
+
 // Spawns a next tetromino onto the field
 bool tm_spawn(Game *game) {
     game->falling_tm = game->next_tm;
     game->next_tm = tm_create_rand(game->block_size);
-    game->falling_tm.pos = (Vec) { 0, FIELD_X / 2 - 1 };
-    game->falling_tm.pos_nh = calc_nh_pos(game->block_size, &game->falling_tm);
     game->falling_tm.gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
     
     if (!tm_fits(game, &game->falling_tm, (Vec) { 0, 0 }))
@@ -184,7 +205,7 @@ static bool tm_mv(Game *game, Tetromino *tm, Direction dir) {
 }
 
 // Shortcut for moving the currently falling tetromino
-static inline bool tm_falling_mv(Game *game, Direction dir) {
+static inline bool tmf_mv(Game *game, Direction dir) {
     return tm_mv(game, &game->falling_tm, dir);
 }
 
@@ -220,19 +241,20 @@ static void tm_hold(Game *game) {
 
     game->held_tm.pos = game->falling_tm.pos;
     game->held_tm.gravity_timer = game->falling_tm.gravity_timer;
+
     tm_tmp = game->falling_tm;
     game->falling_tm = game->held_tm;
     game->held_tm = tm_tmp;
-
 }
 
 // Rotates the falling tetromino clockwise
 static void tm_rotate(Game *game) {
-    Tetromino tm_tmp = game->falling_tm;
-    tm_tmp.orientation = (tm_tmp.orientation + 1) % TM_ORIENT;
-    for (u8 i = 0; i < TM_SIZE; i++)
-        tm_tmp.block[i] = TM_BLOCKS[tm_tmp.type][tm_tmp.orientation][i];
-    tm_tmp.pos_nh = calc_nh_pos(game->block_size, &tm_tmp);
+    if (game->falling_tm.type == TM_O) {
+        game->falling_tm.orientation++;
+        return;
+    }
+
+    Tetromino tm_tmp = tm_rotated(game->block_size, &game->falling_tm);
 
     if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 })) {
         game->falling_tm = tm_tmp;
@@ -251,15 +273,28 @@ static bool is_line_full(Game *game, u8 line) {
     return true;
 }
 
+// Checks if a line on a field is empty 
+static bool is_line_empty(Game *game, u8 line) {
+    for (u8 x = 0; x < FIELD_X; x++)
+        if (game->field[line][x] != BLACK)
+            return false;
+    return true;
+}
+
+// Removes a line by moving all of the lines above one block down
 static void remove_line(Game *game, u8 line) {
-    for (i8 y = line; y > 0; y--)
+    for (i8 y = line; y > 0; y--) {
+        if (is_line_empty(game, line)) 
+            break;
         for (u8 x = 0; x < FIELD_X; x++)
             game->field[y][x] = game->field[y-1][x];
+    }
 
     for (u8 x = 0; x < FIELD_X; x++)
         game->field[0][x] = BLACK;
 }
 
+// Clears all full lines and awards points
 static void clear_lines(Game *game) {
     u8 lines_cleared = 0;
     u16 multiplier = 0;
@@ -292,11 +327,12 @@ static void clear_lines(Game *game) {
     game->lines_cleared += lines_cleared;
 }
 
+// Drops the falling tetromino to the ground and awards points
 static void hard_drop(Game *game) {
     u8 init_y, height;
 
     init_y = game->falling_tm.pos.y;
-    while (tm_falling_mv(game, DOWN));
+    while (tmf_mv(game, DOWN));
     height = game->falling_tm.pos.y - init_y;
     game->score += 2 * height;
 }
@@ -350,7 +386,7 @@ void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm) {
     }
 }
 
-// Draws a preview of a tetromino; it's final position when dropped
+// Draws a preview of a tetromino; it's final position when hard dropped
 void tm_draw_preview(WINDOW *win, Vec block_size, Game *game, Tetromino *tm) {
     Tetromino tm_preview = *tm;
     while (tm_fits(game, &tm_preview, (Vec) { 1, 0 }))
@@ -390,17 +426,14 @@ void print_level(WINDOW *w_level, u8 level) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, u16 ch) {
-    u8 init_tm_falling_y, height;
-    game->frame++;
-
     // Setting the correct gravity timer if a tetromino is on the floor
-    if (game->gravity_acted && !tm_fits(game, &game->falling_tm, (Vec) { 1, 0 }))
+    if (game->gravity_acted && tm_is_on_floor(game))
         game->falling_tm.gravity_timer = FRAMES_BEFORE_SET; 
 
     // Input handling
     switch (ch) {
-        case KEY_LEFT:  tm_falling_mv(game, LEFT); break; 
-        case KEY_RIGHT: tm_falling_mv(game, RIGHT); break;
+        case KEY_LEFT:  tmf_mv(game, LEFT); break; 
+        case KEY_RIGHT: tmf_mv(game, RIGHT); break;
         case KEY_UP:    tm_rotate(game); break;
         case 'z':       tm_hold(game); break;
         case 'q':       return false; break;
@@ -415,9 +448,9 @@ bool tick(Game *game, u16 ch) {
             break;
 
         case KEY_DOWN:  
-            if (!tm_falling_mv(game, DOWN)) 
+            if (!tmf_mv(game, DOWN)) 
                 tm_set(game); 
-            if (game->gravity_acted && !tm_fits(game, &game->falling_tm, (Vec) { 1, 0 }))
+            if (game->gravity_acted && tm_is_on_floor(game))
                 game->falling_tm.gravity_timer = FRAMES_BEFORE_SET;
             game->score++;
             break;
@@ -428,7 +461,7 @@ bool tick(Game *game, u16 ch) {
     if (game->falling_tm.gravity_timer == 0) {
         game->falling_tm.gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
         game->gravity_acted = true;
-        if (!tm_falling_mv(game, DOWN)) {
+        if (tm_is_on_floor(game)) {
             tm_set(game);
             if (!tm_spawn(game)) { 
                 sleep(1); 

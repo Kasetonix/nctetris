@@ -9,6 +9,8 @@
 #define TM_NUM 7
 #define TM_ORIENT 4
 
+#define WK_TESTS 4
+
 #define FIELD_UM 1
 #define FIELD_X 10
 #define FIELD_Y 21
@@ -22,7 +24,7 @@
 #define DRAW_CHAR ' '
 #define PREV_CHAR '*'
 
-#define FRAMES_BEFORE_SET 10
+#define FRAMES_BEFORE_SET (FRAMERATE / 2)
 #define LINES_PER_LEVEL 10
 
 typedef struct Vec {
@@ -30,17 +32,24 @@ typedef struct Vec {
     i16 x;
 } Vec;
 
+typedef struct BoundingBox {
+    u8 top;
+    u8 bottom;
+    u8 left;
+    u8 right;
+} BoundingBox;
+
 typedef struct Tetromino {
     u8 type;
     u8 orientation;
     Vec pos;
     Vec pos_nh;
     Vec block[TM_SIZE];
+    BoundingBox bbox;
     u8 gravity_timer;
 } Tetromino;
 
 typedef struct Game {
-    u32 frame;
     u32 score;
     u32 lines_cleared;
     Tetromino falling_tm;
@@ -50,6 +59,10 @@ typedef struct Game {
     bool gravity_acted;
     Vec block_size;
 } Game;
+
+typedef enum Tm_Type {
+    TM_I, TM_O, TM_T, TM_J, TM_L, TM_S, TM_Z
+} Tm_Type;
 
 typedef enum Direction {
     LEFT, RIGHT, UP, DOWN
