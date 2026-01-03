@@ -56,7 +56,6 @@ typedef struct Tetromino {
     Vec pos_nh;
     Vec block[TM_SIZE];
     BoundingBox bbox;
-    u8 gravity_timer;
 } Tetromino;
 
 typedef struct Game {
@@ -66,9 +65,10 @@ typedef struct Game {
     Tetromino next_tm;
     Tetromino held_tm;
     u8 field[FIELD_Y][FIELD_X];
+    u8 gravity_timer;
     bool gravity_acted;
-    Vec block_size;
     bool paused;
+    Vec block_size;
 } Game;
 
 typedef enum Tm_Type {

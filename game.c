@@ -96,11 +96,10 @@ static Vec calc_nh_pos(Vec block_size, Tetromino *tm) {
     return nh_pos;
 }
 
-static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation, u8 gravity_timer) {
+static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation) {
     tm->type = type;
     tm->orientation = orientation;
     tm->pos = (Vec) { pos.y, pos.x };
-    tm->gravity_timer = gravity_timer;
 
     for (u8 i = 0; i < TM_SIZE; i++) {
         tm->block[i] = TM_BLOCKS[tm->type][tm->orientation][i];
@@ -113,7 +112,7 @@ static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orie
 // Generates a random tetromino
 Tetromino tm_create_rand(Vec block_size) {
     Tetromino tm;
-    tm_get_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0, GRAVITY[0]);
+    tm_get_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0);
     tm.pos.x = (FIELD_X - (tm.bbox.right - tm.bbox.left + 1)) / 2;
     return tm;
 }
@@ -121,7 +120,7 @@ Tetromino tm_create_rand(Vec block_size) {
 // Returns a rotated tetromino without any checks
 Tetromino tm_rotated(Vec block_size, Tetromino *tm) {
     Tetromino tm_r;
-    tm_get_data(block_size, &tm_r, tm->pos, tm->type, (tm->orientation + 1) % TM_ORIENT, tm->gravity_timer);
+    tm_get_data(block_size, &tm_r, tm->pos, tm->type, (tm->orientation + 1) % TM_ORIENT);
     return tm_r; 
 }
 
@@ -167,7 +166,7 @@ bool tm_is_on_floor(Game *game) {
 bool tm_spawn(Game *game) {
     game->falling_tm = game->next_tm;
     game->next_tm = tm_create_rand(game->block_size);
-    game->falling_tm.gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
+    game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
     
     if (!tm_fits(game, &game->falling_tm, (Vec) { 0, 0 }))
         return false;
@@ -240,7 +239,6 @@ static void tm_hold(Game *game) {
     } 
 
     game->held_tm.pos = game->falling_tm.pos;
-    game->held_tm.gravity_timer = game->falling_tm.gravity_timer;
 
     tm_tmp = game->falling_tm;
     game->falling_tm = game->held_tm;
@@ -426,10 +424,6 @@ void print_level(WINDOW *w_level, u8 level) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, u16 ch) {
-    // Setting the correct gravity timer if a tetromino is on the floor
-    if (game->gravity_acted && tm_is_on_floor(game))
-        game->falling_tm.gravity_timer = FRAMES_BEFORE_SET; 
-
     // Input handling
     switch (ch) {
         case CH_MV_LEFT:  tmf_mv(game, LEFT); break; 
@@ -437,7 +431,7 @@ bool tick(Game *game, u16 ch) {
         case CH_ROTATE:   tm_rotate(game); break;
         case CH_HOLD:     tm_hold(game); break;
         case CH_QUIT:     return false; break;
-
+        case CH_SOFT_DROP:  if (tmf_mv(game, DOWN)) game->score++; break;
         case CH_HARD_DROP:
             hard_drop(game);
             tm_set(game);
@@ -446,19 +440,16 @@ bool tick(Game *game, u16 ch) {
                 return false; 
             }
             break;
-
-        case CH_SOFT_DROP:  
-            tmf_mv(game, DOWN); 
-            if (game->gravity_acted && tm_is_on_floor(game))
-                game->falling_tm.gravity_timer = FRAMES_BEFORE_SET;
-            game->score++;
-            break;
     }
 
+    // Setting the correct gravity timer if a tetromino just fell
+    if (game->gravity_acted && tm_is_on_floor(game))
+        game->gravity_timer = FRAMES_BEFORE_SET; 
+
     // Handling gravity
-    game->falling_tm.gravity_timer--;
-    if (game->falling_tm.gravity_timer == 0) {
-        game->falling_tm.gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
+    game->gravity_timer--;
+    if (game->gravity_timer == 0) {
+        game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN)) {
             tm_set(game);
