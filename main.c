@@ -1,0 +1,92 @@
+#include <curses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <time.h>
+#include "win_loc_dim.h"
+#include "game.h"
+
+int main() {
+    bool run = true;
+    u16 ch;
+    Windim scrdim;
+    time_t c_time;
+    struct timespec req;
+
+    WINDOW *win[WINDOW_NUM];
+
+    srand(time(NULL));
+
+    req.tv_sec = 0;
+    init_ncurses();
+
+    Game game = {
+        .frame = 0,
+        .score = 0,
+        .lines_cleared = 0,
+        .gravity_acted = false,
+        .block_size = { 1, 2 }
+    };
+
+    scrdim = get_scrdim();
+    // Scaling the windows if there is enough space
+    if (scrdim.cols >= 62 && scrdim.rows >= 42)
+        game.block_size = (Vec) { 2, 4 };
+
+    game.next_tm = tm_create_rand(game.block_size);
+    game.held_tm = tm_create_rand(game.block_size);
+    game.held_tm.type = BLACK;
+    tm_spawn(&game);
+
+    for (u8 y = 0; y < FIELD_Y; y++) {
+        for (u8 x = 0; x < FIELD_X; x++) {
+            game.field[y][x] = BLACK;
+        }
+    }
+
+    win[WIN_FIELD]  = create_win(WINLOC_FIELD_Y, WINLOC_FIELD_X, WINDIM_FIELD_Y, WINDIM_FIELD_X);
+    win[WIN_NEXTTM] = create_win(WINLOC_NEXTTM_Y, WINLOC_NEXTTM_X, WINDIM_NEXTTM_Y, WINDIM_NEXTTM_X);
+    win[WIN_HOLDTM] = create_win(WINLOC_HOLDTM_Y, WINLOC_HOLDTM_X, WINDIM_HOLDTM_Y, WINDIM_HOLDTM_X);
+    win[WIN_SCORE]  = create_win(WINLOC_SCORE_Y, WINLOC_SCORE_X, WINDIM_SCORE_Y, WINDIM_SCORE_X);
+    win[WIN_LEVEL]  = create_win(WINLOC_LEVEL_Y, WINLOC_LEVEL_X, WINDIM_LEVEL_Y, WINDIM_LEVEL_X);
+
+    c_time = clock();
+
+    while (run) {
+        c_time = clock();
+
+        if (!tick(&game, ch))
+            run = !run;
+
+        // Clearing the windows
+        for (u8 w = 0; w < WINDOW_NUM; w++)
+            werase(win[w]);
+
+        // Drawing
+        field_draw(win[WIN_FIELD], game.block_size, &game);
+        tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.falling_tm);
+        tm_draw(win[WIN_FIELD], game.block_size, &game.falling_tm, false);
+        tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.held_tm);
+        tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.next_tm);
+        print_score(win[WIN_SCORE], game.score);
+        print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
+
+        // Borders
+        border_draw(win[WIN_FIELD], WINT_FIELD);
+        border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
+        border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
+        border_draw(win[WIN_SCORE], WINT_SCORE);
+        border_draw(win[WIN_LEVEL], WINT_LEVEL);
+
+        doupdate();
+        ch = getch();
+
+        req.tv_nsec = FRAMETIME_NS - ns(time_since(c_time));
+        nanosleep(&req, NULL);
+    }
+
+    endwin();
+    printf("LEVEL: %hu | SCORE: %u\n", game.lines_cleared / LINES_PER_LEVEL + 1, game.score);
+    return 0;
+}
