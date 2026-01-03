@@ -431,15 +431,20 @@ bool tick(Game *game, u16 ch) {
         case CH_ROTATE:   tm_rotate(game); break;
         case CH_HOLD:     tm_hold(game); break;
         case CH_QUIT:     return false; break;
-        case CH_SOFT_DROP:  if (tmf_mv(game, DOWN)) game->score++; break;
+        
+        case CH_SOFT_DROP:  
+            if (tmf_mv(game, DOWN)) {
+                game->score++;
+                game->gravity_acted = true;
+            } break;
+
         case CH_HARD_DROP:
             hard_drop(game);
             tm_set(game);
             if (!tm_spawn(game)) { 
                 sleep(1); 
                 return false; 
-            }
-            break;
+            } break;
     }
 
     // Setting the correct gravity timer if a tetromino just fell
@@ -447,7 +452,6 @@ bool tick(Game *game, u16 ch) {
         game->gravity_timer = FRAMES_BEFORE_SET; 
 
     // Handling gravity
-    game->gravity_timer--;
     if (game->gravity_timer == 0) {
         game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
         game->gravity_acted = true;
@@ -460,6 +464,7 @@ bool tick(Game *game, u16 ch) {
         }
     } else {
         game->gravity_acted = false;
+        game->gravity_timer--;
     }
 
     clear_lines(game);
