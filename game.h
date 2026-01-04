@@ -24,7 +24,8 @@
 #define DRAW_CHAR ' '
 #define PREV_CHAR '*'
 
-#define FRAMES_BEFORE_SET (FRAMERATE / 2)
+#define LOCKDOWN_FRAMES (FRAMERATE / 2)
+#define FLOOR_MOVES 15
 #define BLINK_FRAMES 5
 #define LINES_PER_LEVEL 10
 
@@ -61,11 +62,12 @@ typedef struct Tetromino {
 typedef struct Game {
     u32 score;
     u32 lines_cleared;
-    Tetromino falling_tm;
-    Tetromino next_tm;
-    Tetromino held_tm;
+    Tetromino tm_field;
+    Tetromino tm_next;
+    Tetromino tm_hold;
     u8 field[FIELD_Y][FIELD_X];
     u8 gravity_timer;
+    u8 floor_counter;
     bool gravity_acted;
     bool paused;
     Vec block_size;
@@ -81,7 +83,7 @@ typedef enum Direction {
 
 
 Tetromino tm_create_rand(Vec block_size);
-bool tm_is_on_floor(Game *game);
+bool tm_on_floor(Game *game, Tetromino *tm);
 void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview);
 void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm);
 void tm_draw_preview(WINDOW *win, Vec block_size, Game *game, Tetromino *tm);

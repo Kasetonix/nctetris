@@ -35,9 +35,9 @@ int main() {
     if (scrdim.cols >= 62 && scrdim.rows >= 42)
         game.block_size = (Vec) { 2, 4 };
 
-    game.next_tm = tm_create_rand(game.block_size);
-    game.held_tm = tm_create_rand(game.block_size);
-    game.held_tm.type = BLACK;
+    game.tm_next = tm_create_rand(game.block_size);
+    game.tm_hold = tm_create_rand(game.block_size);
+    game.tm_hold.type = BLACK;
     tm_spawn(&game);
 
     for (u8 y = 0; y < FIELD_Y; y++) {
@@ -67,15 +67,15 @@ int main() {
 
         // Drawing
         field_draw(win[WIN_FIELD], game.block_size, &game);
-        tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.held_tm);
-        tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.next_tm);
+        tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.tm_hold);
+        tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.tm_next);
         print_score(win[WIN_SCORE], game.score);
         print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
 
         // Blink when on the floor
-        if (!(tm_is_on_floor(&game) && frame % BLINK_FRAMES == 0)) {
-            tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.falling_tm);
-            tm_draw(win[WIN_FIELD], game.block_size, &game.falling_tm, false);
+        if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {
+            tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
+            tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
         }
 
         // Borders
