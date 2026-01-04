@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#define TIME_PRECISION 6
 #define WINDOW_NUM 5
 #define MAX_TITLE_LEN 32
 
@@ -47,4 +46,4 @@ Windim get_scrdim();
 
 // general
 f32 time_since(clock_t clock);
-u64 ns(f32 time);
+u64 us(f32 time);

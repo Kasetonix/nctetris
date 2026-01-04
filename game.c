@@ -1,6 +1,7 @@
 #include <curses.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include "game.h"
 
@@ -118,9 +119,10 @@ Tetromino tm_create_rand(Vec block_size) {
 }
 
 // Returns a rotated tetromino without any checks
-Tetromino tm_rotated(Vec block_size, Tetromino *tm) {
+static Tetromino tm_rotated(Vec block_size, Tetromino *tm, bool clockwise) {
     Tetromino tm_r;
-    tm_get_data(block_size, &tm_r, tm->pos, tm->type, (tm->orientation + 1) % TM_ORIENT);
+    u8 orientation = (tm->orientation + (clockwise ? 1 : TM_ORIENT - 1)) % TM_ORIENT;
+    tm_get_data(block_size, &tm_r, tm->pos, tm->type, orientation);
     return tm_r; 
 }
 
@@ -265,14 +267,14 @@ static void tm_hold(Game *game) {
 }
 
 // Rotates the field tetromino clockwise
-static void tm_rotate(Game *game) {
+static void tm_rotate(Game *game, bool clockwise) {
     tm_handle_ldd(game);
     if (game->tm_field.type == TM_O) {
         game->tm_field.orientation++;
         return;
     }
 
-    Tetromino tm_tmp = tm_rotated(game->block_size, &game->tm_field);
+    Tetromino tm_tmp = tm_rotated(game->block_size, &game->tm_field, clockwise);
 
     if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 })) {
         game->tm_field = tm_tmp;
@@ -449,11 +451,12 @@ bool tick(Game *game, u16 ch) {
 
     // Input handling
     switch (ch) {
-        case CH_MV_LEFT:  tmf_mv(game, LEFT); break; 
-        case CH_MV_RIGHT: tmf_mv(game, RIGHT); break;
-        case CH_ROTATE:   tm_rotate(game); break;
-        case CH_HOLD:     tm_hold(game); break;
-        case CH_QUIT:     return false; break;
+        case CH_MV_LEFT:    tmf_mv(game, LEFT); break; 
+        case CH_MV_RIGHT:   tmf_mv(game, RIGHT); break;
+        case CH_ROTATE_CW:  tm_rotate(game, true); break;
+        case CH_ROTATE_CCW: tm_rotate(game, false); break;
+        case CH_HOLD:       tm_hold(game); break;
+        case CH_QUIT:       return false; break;
         
         case CH_SOFT_DROP:  
             if (tmf_mv(game, DOWN)) {

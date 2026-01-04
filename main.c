@@ -13,13 +13,11 @@ int main() {
     u64 frame = 0;
     Windim scrdim;
     time_t c_time;
-    struct timespec req;
 
     WINDOW *win[WINDOW_NUM];
 
     srand(time(NULL));
 
-    req.tv_sec = 0;
     init_ncurses();
 
     Game game = {
@@ -55,6 +53,8 @@ int main() {
     c_time = clock();
 
     while (run) {
+        usleep(FRAMETIME_US - us(time_since(c_time)));
+
         frame++;
         c_time = clock();
 
@@ -91,9 +91,6 @@ int main() {
         if (ch == CH_PAUSE) {
 
         }
-
-        req.tv_nsec = FRAMETIME_NS - ns(time_since(c_time));
-        nanosleep(&req, NULL);
     }
 
     endwin();

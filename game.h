@@ -3,7 +3,7 @@
 
 #define FRAMERATE 30
 #define FRAMETIME (1.0 / FRAMERATE)
-#define FRAMETIME_NS (FRAMETIME * 1e9)
+#define FRAMETIME_US (FRAMETIME * 1e6)
 
 #define TM_SIZE 4
 #define TM_NUM 7
@@ -24,14 +24,16 @@
 #define DRAW_CHAR ' '
 #define PREV_CHAR '*'
 
-#define LOCKDOWN_FRAMES (FRAMERATE / 2)
 #define FLOOR_MOVES 15
+#define LOCKDOWN_FRAMES (FRAMERATE / 2)
 #define BLINK_FRAMES 5
+#define ENTRY_DELAY 3
 #define LINES_PER_LEVEL 10
 
 #define CH_MV_LEFT KEY_LEFT
 #define CH_MV_RIGHT KEY_RIGHT
-#define CH_ROTATE KEY_UP
+#define CH_ROTATE_CW KEY_UP
+#define CH_ROTATE_CCW 'z'
 #define CH_SOFT_DROP KEY_DOWN 
 #define CH_HARD_DROP ' '
 #define CH_HOLD 'c'

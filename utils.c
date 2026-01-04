@@ -47,6 +47,7 @@ inline f32 time_since(clock_t time) {
     return (clock() - time * 1.0) / CLOCKS_PER_SEC;
 }
 
-inline u64 ns(f32 time) {
-    return (u64) time * 1000000000L;
+// Converts seconds to microseconds
+inline u64 us(f32 time) {
+    return (u64) time * 1000000L;
 }
