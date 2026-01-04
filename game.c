@@ -217,6 +217,7 @@ static void tm_lock(Game *game) {
         game->field[block_pos.y][block_pos.x] = game->tm_field.type;
     }
     game->entry_delay = ENTRY_DELAY;
+    game->tm_field.type = BLACK;
 }
 
 // Handles lock down delay for field tetromino,
@@ -302,30 +303,33 @@ static bool is_line_empty(Game *game, u8 line) {
 }
 
 // Removes a line by moving all of the lines above one block down
-static void remove_line(Game *game, u8 line) {
-    for (i8 y = line; y > 0; y--) {
-        if (is_line_empty(game, line)) 
-            break;
-        for (u8 x = 0; x < FIELD_X; x++)
-            game->field[y][x] = game->field[y-1][x];
+static void remove_lines(Game *game, u8 removed_line, u8 line_no) {
+    for (i8 y = removed_line; y >= 0; y--) {
+        if (y - line_no >= 0)
+            for (u8 x = 0; x < FIELD_X; x++)
+                game->field[y][x] = game->field[y - line_no][x];
+        else
+            for (u8 x = 0; x < FIELD_X; x++)
+                game->field[y][x] = BLACK;
     }
-
-    for (u8 x = 0; x < FIELD_X; x++)
-        game->field[0][x] = BLACK;
 }
 
 // Clears all full lines and awards points
 static void clear_lines(Game *game) {
     u8 lines_cleared = 0;
+    u8 removed_line;
     u16 multiplier = 0;
 
     for (u8 line = 0; line < FIELD_Y; line++) {
         if (is_line_full(game, line)) {
-            remove_line(game, line);
             lines_cleared++;
-            line++;
+            removed_line = line;
+            if (lines_cleared == 4)
+                break;
         }
     }
+
+    remove_lines(game, removed_line, lines_cleared);
 
     if (!is_line_full(game, FIELD_Y - 1)) {
         switch (lines_cleared) {
@@ -386,6 +390,9 @@ static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool prev
 
 // Draws a tetromino
 void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview) {
+    if (tm->type == BLACK)
+        return;
+
     Vec drawing_pos;
     for (u8 i = 0; i < TM_SIZE; i++) {
         drawing_pos.y = block_size.y * (tm->pos.y + tm->block[i].y - FIELD_UM) + BORDER_THICKNESS;
@@ -420,8 +427,8 @@ void field_draw(WINDOW *w_field, Vec block_size, Game *game) {
     bool prev = false;
 
     for (u8 y = FIELD_UM; y < FIELD_Y; y++) {
-        if (is_line_full(game, y))
-            prev = true;
+        // if (is_line_full(game, y))
+        //     prev = true;
         for (u8 x = 0; x < FIELD_X; x++) {
             block_draw(w_field, block_size, pos, game->field[y][x], prev);
             pos.x += block_size.x;
@@ -468,17 +475,13 @@ bool tick(Game *game, u16 ch) {
         case CH_ROTATE_CCW: tm_rotate(game, false); break;
         case CH_HOLD:       tm_hold(game); break;
         case CH_QUIT:       return false; break;
+        case CH_HARD_DROP:  hard_drop(game); tm_lock(game); break;
         
         case CH_SOFT_DROP:  
             if (tmf_mv(game, DOWN)) {
                 game->score++;
                 game->gravity_acted = true;
             } break;
-
-        case CH_HARD_DROP:
-            hard_drop(game);
-            tm_lock(game);
-            break;
     }
 
     // Setting the correct gravity timer if a tetromino just fell
@@ -489,9 +492,8 @@ bool tick(Game *game, u16 ch) {
     if (game->gravity_timer == 0) {
         game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
         game->gravity_acted = true;
-        if (!tmf_mv(game, DOWN)) {
+        if (!tmf_mv(game, DOWN))
             tm_lock(game);
-        }
     } else {
         game->gravity_acted = false;
         game->gravity_timer--;
