@@ -25,6 +25,7 @@ int main() {
         .lines_cleared = 0,
         .gravity_acted = false,
         .block_size = { 1, 2 },
+        .entry_delay = 0,
         .paused = false
     };
 
@@ -61,21 +62,24 @@ int main() {
         if (!tick(&game, ch))
             run = !run;
 
-        // Clearing the windows
-        for (u8 w = 0; w < WINDOW_NUM; w++)
-            werase(win[w]);
+        // Don't draw anything when new tetromino is set to enter
+        if (game.entry_delay == 0 || game.entry_delay == ENTRY_DELAY) {
+            // Clearing the windows
+            for (u8 w = 0; w < WINDOW_NUM; w++)
+                werase(win[w]);
 
-        // Drawing
-        field_draw(win[WIN_FIELD], game.block_size, &game);
-        tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.tm_hold);
-        tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.tm_next);
-        print_score(win[WIN_SCORE], game.score);
-        print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
+            // Drawing
+            field_draw(win[WIN_FIELD], game.block_size, &game);
+            tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.tm_hold);
+            tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.tm_next);
+            print_score(win[WIN_SCORE], game.score);
+            print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
 
-        // Blink when on the floor
-        if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {
-            tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
-            tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
+            // Blink when on the floor
+            if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {
+                tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
+                tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
+            }
         }
 
         // Borders

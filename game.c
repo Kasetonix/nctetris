@@ -1,7 +1,6 @@
 #include <curses.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
 #include "game.h"
 
@@ -217,6 +216,7 @@ static void tm_lock(Game *game) {
         };
         game->field[block_pos.y][block_pos.x] = game->tm_field.type;
     }
+    game->entry_delay = ENTRY_DELAY;
 }
 
 // Handles lock down delay for field tetromino,
@@ -446,6 +446,17 @@ void print_level(WINDOW *w_level, u8 level) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, u16 ch) {
+    if (game->entry_delay > 1) {
+        game->entry_delay--;
+        return true;
+    } else if (game->entry_delay == 1) {
+        game->entry_delay--;
+        if (!tm_spawn(game)) { 
+            sleep(1); 
+            return false; 
+        }
+    }
+
     if (!tm_on_floor(game, &game->tm_field))
         game->floor_counter = FLOOR_MOVES; 
 
@@ -467,10 +478,7 @@ bool tick(Game *game, u16 ch) {
         case CH_HARD_DROP:
             hard_drop(game);
             tm_lock(game);
-            if (!tm_spawn(game)) { 
-                sleep(1); 
-                return false; 
-            } break;
+            break;
     }
 
     // Setting the correct gravity timer if a tetromino just fell
@@ -483,10 +491,6 @@ bool tick(Game *game, u16 ch) {
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN)) {
             tm_lock(game);
-            if (!tm_spawn(game)) { 
-                sleep(1); 
-                return false; 
-            }
         }
     } else {
         game->gravity_acted = false;
