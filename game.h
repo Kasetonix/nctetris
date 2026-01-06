@@ -11,6 +11,8 @@
 
 #define WK_TESTS 4
 
+#define BAG_SIZE 7
+
 #define FIELD_UM 1
 #define FIELD_X 10
 #define FIELD_Y 21
@@ -22,7 +24,7 @@
 #define LVL_NUM 20
 
 #define DRAW_CHAR ' '
-#define PREV_CHAR '*'
+#define GHOST_CHAR '*'
 
 #define FLOOR_MOVES 15
 #define LOCKDOWN_FRAMES (FRAMERATE / 2)
@@ -64,10 +66,12 @@ typedef struct Tetromino {
 typedef struct Game {
     u32 score;
     u32 lines_cleared;
+    u8 bag[BAG_SIZE];
+    u8 bag_index;
     Tetromino tm_field;
     Tetromino tm_next;
-    bool swapped;
     Tetromino tm_hold;
+    bool swapped;
     u8 field[FIELD_Y][FIELD_X];
     u8 gravity_timer;
     u8 floor_counter;
@@ -86,11 +90,11 @@ typedef enum Direction {
 } Direction;
 
 
-Tetromino tm_create_rand(Vec block_size);
+Tetromino tm_create_rand(Game *game);
 bool tm_on_floor(Game *game, Tetromino *tm);
-void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview);
+void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool ghost);
 void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm);
-void tm_draw_preview(WINDOW *win, Vec block_size, Game *game, Tetromino *tm);
+void tm_draw_ghost(WINDOW *win, Vec block_size, Game *game, Tetromino *tm);
 void field_draw(WINDOW *w_field, Vec block_size, Game *game);
 bool tm_spawn(Game *game);
 void print_score(WINDOW *w_score, u32 score);

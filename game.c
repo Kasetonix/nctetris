@@ -96,7 +96,8 @@ static Vec calc_nh_pos(Vec block_size, Tetromino *tm) {
     return nh_pos;
 }
 
-static void tm_insert_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation) {
+// Inserts data into a tetromino struct
+static void tm_insert_data(Vec block_size, Tetromino *tm, Vec pos, Tm_Type type, u8 orientation) {
     tm->type = type;
     tm->orientation = orientation;
     tm->pos = (Vec) { pos.y, pos.x };
@@ -109,19 +110,50 @@ static void tm_insert_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 o
     tm->pos_nh = calc_nh_pos(block_size, tm);
 }
 
+// Centers a tetromino
+inline static void tm_center(Tetromino *tm) {
+    tm->pos.x = (FIELD_X - (tm->bbox.right - tm->bbox.left + 1)) / 2 - tm->bbox.left;
+}
+
+// Shuffles a randomizer bag using Fisher-Yates shuffle
+static void shuffle_bag(Game *game) {
+    u8 i, j;
+    Tm_Type tmp;
+    for (i = 0; i < BAG_SIZE - 1; i++) {
+        j = rand() % (i + 1);
+        tmp = game->bag[i];
+        game->bag[i] = game->bag[j];
+        game->bag[j] = tmp;
+    }
+}
+
+// Returns a tetromino type from the bag randomizer
+inline static Tm_Type tm_rand(Game *game) {
+    Tm_Type val = game->bag[game->bag_index];
+
+    if (game->bag_index == BAG_SIZE - 1) {
+        shuffle_bag(game);
+        game->bag_index = 0;
+    } else {
+        game->bag_index++;
+    }
+
+    return val;
+}
+
 // Generates a random tetromino
-Tetromino tm_create_rand(Vec block_size) {
+Tetromino tm_create_rand(Game *game) {
     Tetromino tm;
-    tm_insert_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0);
-    tm.pos.x = (FIELD_X - (tm.bbox.right - tm.bbox.left + 1)) / 2 - tm.bbox.left;
+    tm_insert_data(game->block_size, &tm, (Vec) { 0, 0 }, tm_rand(game), 0);
+    tm_center(&tm);
     return tm;
 }
 
 // Returns a rotated tetromino without any checks
-static Tetromino tm_rotated(Vec block_size, Tetromino *tm, bool clockwise) {
+static Tetromino tm_rotated(Game *game, Tetromino *tm, bool clockwise) {
     Tetromino tm_r;
     u8 orientation = (tm->orientation + (clockwise ? 1 : TM_ORIENT - 1)) % TM_ORIENT;
-    tm_insert_data(block_size, &tm_r, tm->pos, tm->type, orientation);
+    tm_insert_data(game->block_size, &tm_r, tm->pos, tm->type, orientation);
     return tm_r; 
 }
 
@@ -166,7 +198,7 @@ bool tm_on_floor(Game *game, Tetromino *tm) {
 // Spawns a next tetromino onto the field
 bool tm_spawn(Game *game) {
     game->tm_field = game->tm_next;
-    game->tm_next = tm_create_rand(game->block_size);
+    game->tm_next = tm_create_rand(game);
     game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
     game->floor_counter = LOCKDOWN_FRAMES;
     game->swapped = false;
@@ -256,7 +288,7 @@ static void tm_hold(Game *game) {
     // not holding a tetromino
     if (game->tm_hold.type == BLACK) { 
         game->tm_hold = game->tm_next;
-        game->tm_next = tm_create_rand(game->block_size);
+        game->tm_next = tm_create_rand(game);
     } 
 
     tm_tmp = game->tm_field;
@@ -264,7 +296,7 @@ static void tm_hold(Game *game) {
     game->tm_hold = tm_tmp;
 
     game->tm_hold.pos.y = 0;
-    game->tm_hold.pos.x = (FIELD_X - (game->tm_hold.bbox.right - game->tm_hold.bbox.left + 1)) / 2 - game->tm_hold.bbox.left;
+    tm_center(&game->tm_hold);
     game->swapped = true;
 }
 
@@ -276,7 +308,7 @@ static void tm_rotate(Game *game, bool clockwise) {
         return;
     }
 
-    Tetromino tm_tmp = tm_rotated(game->block_size, &game->tm_field, clockwise);
+    Tetromino tm_tmp = tm_rotated(game, &game->tm_field, clockwise);
 
     if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 })) {
         game->tm_field = tm_tmp;
@@ -366,13 +398,13 @@ static void hard_drop(Game *game) {
 }
 
 // Draws a singular block
-static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool preview) {
+static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool ghost) {
     if (color == BLACK)
         return;
     if (pos.x < 0 || pos.y < 0)
         return;
 
-    if (!preview) {
+    if (!ghost) {
         for (u8 y = 0; y < block_size.y; y++) {
             wmove(win, pos.y + y, pos.x);
             for (u8 x = 0; x < block_size.x; x++) {
@@ -383,7 +415,7 @@ static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool prev
         for (u8 y = 0; y < block_size.y; y++) {
             wmove(win, pos.y + y, pos.x);
             for (u8 x = 0; x < block_size.x; x++) {
-                waddch(win, PREV_CHAR | COLOR_PAIR(color));
+                waddch(win, GHOST_CHAR | COLOR_PAIR(color));
             }
         }
         
@@ -393,7 +425,7 @@ static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool prev
 }
 
 // Draws a tetromino
-void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview) {
+void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool ghost) {
     if (tm->type == BLACK)
         return;
 
@@ -401,7 +433,7 @@ void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool preview) {
     for (u8 i = 0; i < TM_SIZE; i++) {
         drawing_pos.y = block_size.y * (tm->pos.y + tm->block[i].y - FIELD_UM) + BORDER_THICKNESS;
         drawing_pos.x = block_size.x * (tm->pos.x + tm->block[i].x) + BORDER_THICKNESS;
-        block_draw(win, block_size, drawing_pos, tm->type, preview);
+        block_draw(win, block_size, drawing_pos, tm->type, ghost);
     }
 }
 
@@ -417,12 +449,12 @@ void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm) {
     }
 }
 
-// Draws a preview of a tetromino; it's final position when hard dropped
-void tm_draw_preview(WINDOW *win, Vec block_size, Game *game, Tetromino *tm) {
-    Tetromino tm_preview = *tm;
-    while (tm_fits(game, &tm_preview, (Vec) { 1, 0 }))
-        tm_preview.pos.y++;
-    tm_draw(win, block_size,  &tm_preview, true);
+// Draws a ghost tetromino; it's final position when hard dropped
+void tm_draw_ghost(WINDOW *win, Vec block_size, Game *game, Tetromino *tm) {
+    Tetromino tm_ghost = *tm;
+    while (tm_fits(game, &tm_ghost, (Vec) { 1, 0 }))
+        tm_ghost.pos.y++;
+    tm_draw(win, block_size, &tm_ghost, true);
 }
 
 // Draws the entire game field
@@ -431,8 +463,6 @@ void field_draw(WINDOW *w_field, Vec block_size, Game *game) {
     bool prev = false;
 
     for (u8 y = FIELD_UM; y < FIELD_Y; y++) {
-        // if (is_line_full(game, y))
-        //     prev = true;
         for (u8 x = 0; x < FIELD_X; x++) {
             block_draw(w_field, block_size, pos, game->field[y][x], prev);
             pos.x += block_size.x;

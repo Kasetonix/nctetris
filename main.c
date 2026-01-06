@@ -23,10 +23,13 @@ int main() {
     Game game = {
         .score = 0,
         .lines_cleared = 0,
-        .gravity_acted = false,
-        .block_size = { 1, 2 },
+        .bag = { 0, 1, 2, 3, 4, 5, 6 },
+        .bag_index = BAG_SIZE - 1,
+        .swapped = false,
         .entry_delay = 0,
-        .paused = false
+        .gravity_acted = false,
+        .paused = false,
+        .block_size = { 1, 2 }
     };
 
     scrdim = get_scrdim();
@@ -34,8 +37,8 @@ int main() {
     if (scrdim.cols >= 62 && scrdim.rows >= 42)
         game.block_size = (Vec) { 2, 4 };
 
-    game.tm_next = tm_create_rand(game.block_size);
-    game.tm_hold = tm_create_rand(game.block_size);
+    game.tm_next = tm_create_rand(&game);
+    game.tm_hold = tm_create_rand(&game);
     game.tm_hold.type = BLACK;
     tm_spawn(&game);
 
@@ -77,7 +80,7 @@ int main() {
 
             // Blink when on the floor
             if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {
-                tm_draw_preview(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
+                tm_draw_ghost(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
                 tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
             }
         }
