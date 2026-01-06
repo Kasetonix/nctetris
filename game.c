@@ -303,18 +303,13 @@ static bool is_line_empty(Game *game, u8 line) {
 }
 
 // Removes a line by moving all of the lines above one block down
-static void remove_lines(Game *game, u8 removed_line, u8 line_no) {
-    if (line_no == 0)
-        return;
+static void remove_line(Game *game, u8 removed_line) {
+    for (u8 y = removed_line; y > 0; y--)
+        for (u8 x = 0; x < FIELD_X; x++)
+            game->field[y][x] = game->field[y-1][x];
 
-    for (i8 y = removed_line; y >= 0; y--) {
-        if (y - line_no >= 0)
-            for (u8 x = 0; x < FIELD_X; x++)
-                game->field[y][x] = game->field[y - line_no][x];
-        else
-            for (u8 x = 0; x < FIELD_X; x++)
-                game->field[y][x] = BLACK;
-    }
+    for (u8 x = 0; x < FIELD_X; x++)
+        game->field[0][x] = BLACK;
 }
 
 // Awards points based on how many lines were cleared
@@ -349,13 +344,13 @@ static void clear_lines(Game *game) {
     for (u8 line = 0; line < FIELD_Y; line++) {
         if (is_line_full(game, line)) {
             lines_cleared++;
-            removed_line = line;
+            remove_line(game, line);
             if (lines_cleared == 4)
                 break;
         }
     }
 
-    remove_lines(game, removed_line, lines_cleared);
+    award_points(game, lines_cleared);
     game->lines_cleared += lines_cleared;
 }
 
