@@ -51,11 +51,11 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
 };
 
 // Gravity level depending on game level
-const u8 GRAVITY[MAX_LVL + 1] = {
+const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 //   0   1   2   3   4   5   6   7   8   9
     24, 22, 19, 17, 14, 12,  9,  7,  4,  3,
-//  10  11  12  13  14  15  16  17  18  19  20
-     3,  3,  3,  2,  2,  2,  2,  2,  2,  1,  1
+//  10  11  12  13  14  15  16  17  18  19  
+     3,  3,  3,  2,  2,  2,  2,  2,  2,  1
 };
 
 // Calculates the bounding box for tetrominoes
@@ -197,7 +197,7 @@ bool tm_on_floor(Game *game, Tetromino *tm) {
 bool tm_spawn(Game *game) {
     game->tm_field = game->tm_next;
     game->tm_next = tm_create_rand(game);
-    game->gravity_timer = GRAVITY[game->level];
+    game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;
     game->floor_counter = LOCKDOWN_FRAMES;
     game->swapped = false;
     
@@ -486,6 +486,7 @@ void print_level(WINDOW *w_level, u8 level) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, u16 ch) {
+    // entry delay
     if (game->entry_delay > 1) {
         game->entry_delay--;
         return true;
@@ -497,6 +498,7 @@ bool tick(Game *game, u16 ch) {
         }
     }
 
+    // resets floor counter when above it
     if (!tm_on_floor(game, &game->tm_field))
         game->floor_counter = FLOOR_MOVES; 
 
@@ -523,7 +525,7 @@ bool tick(Game *game, u16 ch) {
 
     // Handling gravity
     if (game->gravity_timer == 0) {
-        game->gravity_timer = GRAVITY[game->level];
+        game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;;
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN))
             tm_lock(game);
@@ -532,6 +534,7 @@ bool tick(Game *game, u16 ch) {
         game->gravity_timer--;
     }
 
+    // clearing lines
     clear_lines(game);
 
     return true;

@@ -21,7 +21,7 @@
 #define BLOCK_X 4
 #define BLOCK_Y 2
 
-#define MAX_LVL 20
+#define GRAVITY_ARR_SIZE 20
 
 #define DRAW_CHAR ' '
 #define GHOST_CHAR '*'
