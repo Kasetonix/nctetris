@@ -119,7 +119,7 @@ inline static void tm_center(Tetromino *tm) {
 static void shuffle_bag(Game *game) {
     u8 i, j;
     Tm_Type tmp;
-    for (i = 0; i < BAG_SIZE - 1; i++) {
+    for (i = 1; i < BAG_SIZE; i++) {
         j = rand() % (i + 1);
         tmp = game->bag[i];
         game->bag[i] = game->bag[j];
@@ -128,13 +128,15 @@ static void shuffle_bag(Game *game) {
 }
 
 // Returns a tetromino type from the bag randomizer
-inline static Tm_Type tm_rand(Game *game) {
-    Tm_Type val = game->bag[game->bag_index];
+static Tm_Type tm_rand(Game *game) {
+    Tm_Type val;
 
     if (game->bag_index == BAG_SIZE - 1) {
         shuffle_bag(game);
+        val = game->bag[game->bag_index];
         game->bag_index = 0;
     } else {
+        val = game->bag[game->bag_index];
         game->bag_index++;
     }
 
