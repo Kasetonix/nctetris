@@ -13,15 +13,15 @@
 
 #define BAG_SIZE 7
 
-#define FIELD_UM 1
+#define FIELD_UM 2
 #define FIELD_X 10
-#define FIELD_Y 21
+#define FIELD_Y (20 + FIELD_UM)
 #define BORDER_THICKNESS 1
 
 #define BLOCK_X 4
 #define BLOCK_Y 2
 
-#define LVL_NUM 20
+#define MAX_LVL 20
 
 #define DRAW_CHAR ' '
 #define GHOST_CHAR '*'
@@ -65,6 +65,7 @@ typedef struct Tetromino {
 
 typedef struct Game {
     u32 score;
+    u8 level;
     u32 lines_cleared;
     u8 bag[BAG_SIZE];
     u8 bag_index;

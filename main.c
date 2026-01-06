@@ -22,6 +22,7 @@ int main() {
 
     Game game = {
         .score = 0,
+        .level = 0,
         .lines_cleared = 0,
         .bag = { 0, 1, 2, 3, 4, 5, 6 },
         .bag_index = 0,
@@ -76,7 +77,7 @@ int main() {
             tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.tm_hold);
             tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.tm_next);
             print_score(win[WIN_SCORE], game.score);
-            print_level(win[WIN_LEVEL], game.lines_cleared / LINES_PER_LEVEL + 1);
+            print_level(win[WIN_LEVEL], game.level);
 
             // Blink when on the floor
             if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {

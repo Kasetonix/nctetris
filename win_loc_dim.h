@@ -6,7 +6,7 @@
 #define WINLOC_FIELD_X 0
 #define WINLOC_FIELD_Y 0 
 #define WINDIM_FIELD_X (2 + game.block_size.x * FIELD_X)
-#define WINDIM_FIELD_Y (2 + game.block_size.y * (FIELD_Y - 1))
+#define WINDIM_FIELD_Y (2 + game.block_size.y * (FIELD_Y - FIELD_UM))
 
 #define WINLOC_HOLDTM_X RIGHT_COL_X
 #define WINLOC_HOLDTM_Y 0

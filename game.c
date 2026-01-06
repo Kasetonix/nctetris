@@ -51,11 +51,11 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
 };
 
 // Gravity level depending on game level
-const u8 GRAVITY[LVL_NUM] = {
+const u8 GRAVITY[MAX_LVL + 1] = {
 //   0   1   2   3   4   5   6   7   8   9
-    50, 48, 46, 44, 42, 40, 38, 36, 34, 32,
-//  10  11  12  13  14  15  16  17  18  19
-    30, 28, 26, 24, 22, 20, 16, 12,  8,  4
+    48, 43, 38, 33, 28, 23, 18, 13,  8,  6,
+//  10  11  12  13  14  15  16  17  18  19  20
+     5,  5,  5,  4,  4,  4,  3,  3,  3,  2,  2
 };
 
 // Calculates the bounding box for tetrominoes
@@ -197,7 +197,7 @@ bool tm_on_floor(Game *game, Tetromino *tm) {
 bool tm_spawn(Game *game) {
     game->tm_field = game->tm_next;
     game->tm_next = tm_create_rand(game);
-    game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
+    game->gravity_timer = GRAVITY[game->level];
     game->floor_counter = LOCKDOWN_FRAMES;
     game->swapped = false;
     
@@ -364,7 +364,7 @@ static void award_points(Game *game, u8 lines_cleared) {
         }
     }
 
-    game->score += multiplier * (game->lines_cleared / LINES_PER_LEVEL + 1);
+    game->score += multiplier * (game->level + 1);
 }
 
 // Clears all full lines and awards points
@@ -381,6 +381,7 @@ static void clear_lines(Game *game) {
         }
     }
 
+    game->level = game->lines_cleared / LINES_PER_LEVEL;
     award_points(game, lines_cleared);
     game->lines_cleared += lines_cleared;
 }
@@ -465,7 +466,7 @@ void field_draw(WINDOW *w_field, Vec block_size, Game *game) {
             block_draw(w_field, block_size, pos, game->field[y][x], prev);
             pos.x += block_size.x;
         }
-        pos.x = 1;
+        pos.x = BORDER_THICKNESS;
         pos.y += block_size.y;
         prev = false;
     } 
@@ -522,7 +523,7 @@ bool tick(Game *game, u16 ch) {
 
     // Handling gravity
     if (game->gravity_timer == 0) {
-        game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
+        game->gravity_timer = GRAVITY[game->level];
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN))
             tm_lock(game);
