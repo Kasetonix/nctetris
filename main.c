@@ -24,7 +24,7 @@ int main() {
         .score = 0,
         .lines_cleared = 0,
         .bag = { 0, 1, 2, 3, 4, 5, 6 },
-        .bag_index = BAG_SIZE - 1,
+        .bag_index = 0,
         .swapped = false,
         .entry_delay = 0,
         .gravity_acted = false,

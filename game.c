@@ -131,15 +131,11 @@ static void shuffle_bag(Game *game) {
 static Tm_Type tm_rand(Game *game) {
     Tm_Type val;
 
-    if (game->bag_index == BAG_SIZE - 1) {
+    if (game->bag_index == 0)
         shuffle_bag(game);
-        val = game->bag[game->bag_index];
-        game->bag_index = 0;
-    } else {
-        val = game->bag[game->bag_index];
-        game->bag_index++;
-    }
 
+    val = game->bag[game->bag_index];
+    game->bag_index = (game->bag_index + 1) % BAG_SIZE;
     return val;
 }
 
