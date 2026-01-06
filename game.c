@@ -46,7 +46,7 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
         { {1, 0}, {1, 1}, {1, 2}, {1, 3} },
         { {0, 2}, {1, 2}, {2, 2}, {3, 2} },
         { {2, 0}, {2, 1}, {2, 2}, {2, 3} },
-        { {0, 1}, {1, 1}, {2, 1}, {3, 1} }
+        { {0, 1}, {1, 1}, {2, 1}, {3, 1} },
     }, 
 };
 
@@ -96,7 +96,7 @@ static Vec calc_nh_pos(Vec block_size, Tetromino *tm) {
     return nh_pos;
 }
 
-static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation) {
+static void tm_insert_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orientation) {
     tm->type = type;
     tm->orientation = orientation;
     tm->pos = (Vec) { pos.y, pos.x };
@@ -112,8 +112,8 @@ static void tm_get_data(Vec block_size, Tetromino *tm, Vec pos, u8 type, u8 orie
 // Generates a random tetromino
 Tetromino tm_create_rand(Vec block_size) {
     Tetromino tm;
-    tm_get_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0);
-    tm.pos.x = (FIELD_X - (tm.bbox.right - tm.bbox.left + 1)) / 2;
+    tm_insert_data(block_size, &tm, (Vec) { 0, 0 }, rand() % TM_NUM, 0);
+    tm.pos.x = (FIELD_X - (tm.bbox.right - tm.bbox.left + 1)) / 2 - tm.bbox.left;
     return tm;
 }
 
@@ -121,7 +121,7 @@ Tetromino tm_create_rand(Vec block_size) {
 static Tetromino tm_rotated(Vec block_size, Tetromino *tm, bool clockwise) {
     Tetromino tm_r;
     u8 orientation = (tm->orientation + (clockwise ? 1 : TM_ORIENT - 1)) % TM_ORIENT;
-    tm_get_data(block_size, &tm_r, tm->pos, tm->type, orientation);
+    tm_insert_data(block_size, &tm_r, tm->pos, tm->type, orientation);
     return tm_r; 
 }
 
@@ -169,6 +169,7 @@ bool tm_spawn(Game *game) {
     game->tm_next = tm_create_rand(game->block_size);
     game->gravity_timer = GRAVITY[game->lines_cleared / LINES_PER_LEVEL];
     game->floor_counter = LOCKDOWN_FRAMES;
+    game->swapped = false;
     
     if (!tm_fits(game, &game->tm_field, (Vec) { 0, 0 }))
         return false;
@@ -244,14 +245,12 @@ static inline bool tmf_mv(Game *game, Direction dir) {
 
 // Exchanges the field tetromino with the held one
 static void tm_hold(Game *game) {
-    Vec offset;
+    if (game->swapped)
+        return;
+
     Tetromino tm_tmp; 
 
-    offset = game->tm_field.pos;
-    offset.x -= game->tm_hold.pos.x;
-    offset.y -= game->tm_hold.pos.y;
-
-    if (!tm_fits(game, &game->tm_hold, offset))
+    if (!tm_fits(game, &game->tm_hold, (Vec) { 0, 0 }))
         return;
 
     // not holding a tetromino
@@ -260,11 +259,13 @@ static void tm_hold(Game *game) {
         game->tm_next = tm_create_rand(game->block_size);
     } 
 
-    game->tm_hold.pos = game->tm_field.pos;
-
     tm_tmp = game->tm_field;
     game->tm_field = game->tm_hold;
     game->tm_hold = tm_tmp;
+
+    game->tm_hold.pos.y = 0;
+    game->tm_hold.pos.x = (FIELD_X - (game->tm_hold.bbox.right - game->tm_hold.bbox.left + 1)) / 2 - game->tm_hold.bbox.left;
+    game->swapped = true;
 }
 
 // Rotates the field tetromino clockwise

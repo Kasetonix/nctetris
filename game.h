@@ -66,6 +66,7 @@ typedef struct Game {
     u32 lines_cleared;
     Tetromino tm_field;
     Tetromino tm_next;
+    bool swapped;
     Tetromino tm_hold;
     u8 field[FIELD_Y][FIELD_X];
     u8 gravity_timer;
