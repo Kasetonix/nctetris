@@ -1,3 +1,5 @@
+#pragma once
+
 #define HPADDING 2
 #define VPADDING 1
 #define RIGHT_COL_X (WINLOC_FIELD_X + WINDIM_FIELD_X + HPADDING)

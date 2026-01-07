@@ -4,8 +4,11 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <time.h>
+
+#include "utils.h"
 #include "win_loc_dim.h"
 #include "game.h"
+#include "draw.h"
 
 int main() {
     bool run = true;
@@ -38,16 +41,16 @@ int main() {
     if (scrdim.cols >= 62 && scrdim.rows >= 42)
         game.block_size = (Vec) { 2, 4 };
 
-    game.tm_next = tm_create_rand(&game);
-    game.tm_hold = tm_create_rand(&game);
-    game.tm_hold.type = BLACK;
-    tm_spawn(&game);
-
     for (u8 y = 0; y < FIELD_Y; y++) {
         for (u8 x = 0; x < FIELD_X; x++) {
             game.field[y][x] = BLACK;
         }
     }
+
+    game.tm_next = tm_create_rand(&game);
+    game.tm_hold = tm_create_rand(&game);
+    game.tm_hold.type = BLACK;
+    tm_spawn(&game);
 
     win[WIN_FIELD]  = create_win(WINLOC_FIELD_Y, WINLOC_FIELD_X, WINDIM_FIELD_Y, WINDIM_FIELD_X);
     win[WIN_NEXTTM] = create_win(WINLOC_NEXTTM_Y, WINLOC_NEXTTM_X, WINDIM_NEXTTM_Y, WINDIM_NEXTTM_X);
@@ -102,6 +105,6 @@ int main() {
     }
 
     endwin();
-    printf("LEVEL: %hu | SCORE: %u\n", game.lines_cleared / LINES_PER_LEVEL + 1, game.score);
+    printf("LEVEL: %hu | SCORE: %u\n", game.level, game.score);
     return 0;
 }

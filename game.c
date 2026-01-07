@@ -156,7 +156,7 @@ static Tetromino tm_rotated(Game *game, Tetromino *tm, bool clockwise) {
 }
 
 // Checks whether a tetromino fits in a given position
-static bool tm_fits(Game *game, Tetromino *tm, Vec offset) {
+bool tm_fits(Game *game, Tetromino *tm, Vec offset) {
     u8 tm_min_x = TM_SIZE - 1, tm_max_x = 0, tm_min_y = TM_SIZE - 1, tm_max_y = 0;
     Vec moved_block_pos;
 
@@ -209,32 +209,30 @@ bool tm_spawn(Game *game) {
 // Attempts to move a tetromino in a given direction,
 // returns true if tetromino was successfully moved
 static bool tm_mv(Game *game, Tetromino *tm, Direction dir) {
-    bool moved = false;
     switch (dir) {
         case LEFT: 
             if (tm_fits(game, tm, (Vec) { 0, -1 })) {
                 tm->pos.x--;
-                moved = true;
+                return true;
             } break;
         case RIGHT: 
             if (tm_fits(game, tm, (Vec) { 0, 1 })) {
                 tm->pos.x++;
-                moved = true;
-            } break;
-        case UP: 
-            if (tm_fits(game, tm, (Vec) { -1, 0 })) {
-                tm->pos.y--;
-                moved = true;
+                return true;
             } break;
         case DOWN: 
             if (tm_fits(game, tm, (Vec) { 1, 0 })) {
                 tm->pos.y++;
-                moved = true;
+                return true;
+            } break;
+        case UP: 
+            if (tm_fits(game, tm, (Vec) { -1, 0 })) {
+                tm->pos.y--;
+                return true;
             } break;
     }
 
-
-    return moved;
+    return false;
 }
 
 // Sets a tetromino onto the field
@@ -381,8 +379,8 @@ static void clear_lines(Game *game) {
         }
     }
 
-    game->level = game->lines_cleared / LINES_PER_LEVEL;
     award_points(game, lines_cleared);
+    game->level = game->lines_cleared / LINES_PER_LEVEL;
     game->lines_cleared += lines_cleared;
 }
 
@@ -394,94 +392,6 @@ static void hard_drop(Game *game) {
     while (tmf_mv(game, DOWN));
     height = game->tm_field.pos.y - init_y;
     game->score += 2 * height;
-}
-
-// Draws a singular block
-static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool ghost) {
-    if (color == BLACK)
-        return;
-    if (pos.x < 0 || pos.y < 0)
-        return;
-
-    if (!ghost) {
-        for (u8 y = 0; y < block_size.y; y++) {
-            wmove(win, pos.y + y, pos.x);
-            for (u8 x = 0; x < block_size.x; x++) {
-                waddch(win, DRAW_CHAR | A_REVERSE | COLOR_PAIR(color));
-            }
-        }
-    } else {
-        for (u8 y = 0; y < block_size.y; y++) {
-            wmove(win, pos.y + y, pos.x);
-            for (u8 x = 0; x < block_size.x; x++) {
-                waddch(win, GHOST_CHAR | COLOR_PAIR(color));
-            }
-        }
-        
-    }
-
-    wnoutrefresh(win);
-}
-
-// Draws a tetromino
-void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool ghost) {
-    if (tm->type == BLACK)
-        return;
-
-    Vec drawing_pos;
-    for (u8 i = 0; i < TM_SIZE; i++) {
-        drawing_pos.y = block_size.y * (tm->pos.y + tm->block[i].y - FIELD_UM) + BORDER_THICKNESS;
-        drawing_pos.x = block_size.x * (tm->pos.x + tm->block[i].x) + BORDER_THICKNESS;
-        block_draw(win, block_size, drawing_pos, tm->type, ghost);
-    }
-}
-
-// Draws a tetromino onto Next and Hold windows
-void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm) {
-    Vec drawing_pos;
-
-    for (u8 i = 0; i < TM_SIZE; i++) {
-        drawing_pos = tm->pos_nh;
-        drawing_pos.y += block_size.y * tm->block[i].y;
-        drawing_pos.x += block_size.x * tm->block[i].x;
-        block_draw(win, block_size, drawing_pos, tm->type, false);
-    }
-}
-
-// Draws a ghost tetromino; it's final position when hard dropped
-void tm_draw_ghost(WINDOW *win, Vec block_size, Game *game, Tetromino *tm) {
-    Tetromino tm_ghost = *tm;
-    while (tm_fits(game, &tm_ghost, (Vec) { 1, 0 }))
-        tm_ghost.pos.y++;
-    tm_draw(win, block_size, &tm_ghost, true);
-}
-
-// Draws the entire game field
-void field_draw(WINDOW *w_field, Vec block_size, Game *game) {
-    Vec pos = { BORDER_THICKNESS, BORDER_THICKNESS };
-    bool prev = false;
-
-    for (u8 y = FIELD_UM; y < FIELD_Y; y++) {
-        for (u8 x = 0; x < FIELD_X; x++) {
-            block_draw(w_field, block_size, pos, game->field[y][x], prev);
-            pos.x += block_size.x;
-        }
-        pos.x = BORDER_THICKNESS;
-        pos.y += block_size.y;
-        prev = false;
-    } 
-}
-
-// Prints the score to the given window
-void print_score(WINDOW *w_score, u32 score) {
-    mvwprintw(w_score, BORDER_THICKNESS, BORDER_THICKNESS, "%i", score);
-    wnoutrefresh(w_score);
-}
-
-// Prints the level to the given window
-void print_level(WINDOW *w_level, u8 level) {
-    mvwprintw(w_level, BORDER_THICKNESS, BORDER_THICKNESS, "%hi", level);
-    wnoutrefresh(w_level);
 }
 
 // Performs the game logic in a given frame
@@ -525,14 +435,15 @@ bool tick(Game *game, u16 ch) {
 
     // Handling gravity
     if (game->gravity_timer == 0) {
-        game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;;
+        game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN))
             tm_lock(game);
     } else {
         game->gravity_acted = false;
-        game->gravity_timer--;
     }
+
+    game->gravity_timer--;
 
     // clearing lines
     clear_lines(game);

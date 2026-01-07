@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdbool.h>
 #include "utils.h"
 
@@ -90,14 +92,8 @@ typedef enum Direction {
     LEFT, RIGHT, UP, DOWN
 } Direction;
 
-
 Tetromino tm_create_rand(Game *game);
+bool tm_fits(Game *game, Tetromino *tm, Vec offset);
 bool tm_on_floor(Game *game, Tetromino *tm);
-void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool ghost);
-void tm_nh_draw(WINDOW *win, Vec block_size, Tetromino *tm);
-void tm_draw_ghost(WINDOW *win, Vec block_size, Game *game, Tetromino *tm);
-void field_draw(WINDOW *w_field, Vec block_size, Game *game);
 bool tm_spawn(Game *game);
-void print_score(WINDOW *w_score, u32 score);
-void print_level(WINDOW *w_level, u8 level);
 bool tick(Game *game, u16 ch);
