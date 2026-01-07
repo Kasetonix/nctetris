@@ -266,9 +266,14 @@ static bool tm_handle_ldd(Game *game) {
 }
 
 // Shortcut for moving the field tetromino
-static inline bool tmf_mv(Game *game, Direction dir) {
+static bool tmf_mv(Game *game, Direction dir) {
+    bool moved;
     tm_handle_ldd(game);
-    return tm_mv(game, &game->tm_field, dir);
+    moved = tm_mv(game, &game->tm_field, dir);
+    if (moved && (dir == LEFT || dir == RIGHT) && tm_on_floor(game, &game->tm_field))
+        game->gravity_timer = LOCKDOWN_FRAMES;
+
+    return moved;
 }
 
 // Exchanges the field tetromino with the held one
