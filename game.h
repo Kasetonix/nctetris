@@ -77,6 +77,7 @@ typedef struct Game {
     bool swapped;
     u8 field[FIELD_Y][FIELD_X];
     u8 gravity_timer;
+    u8 floor_timer;
     u8 floor_counter;
     u8 entry_delay;
     bool gravity_acted;

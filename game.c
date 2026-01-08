@@ -55,8 +55,12 @@ const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 //   0   1   2   3   4   5   6   7   8   9
     24, 22, 19, 17, 14, 12,  9,  7,  4,  3,
 //  10  11  12  13  14  15  16  17  18  19  
-     3,  3,  3,  2,  2,  2,  2,  2,  2,  1
+     3,  3,  3,  2,  2,  2,  2,  2,  2,  2
 };
+
+inline static u8 gravity(u8 level) {
+    return level < GRAVITY_ARR_SIZE ? GRAVITY[level] : 2;
+}
 
 // Calculates the bounding box for tetrominoes
 static BoundingBox calc_bbox(Tetromino *tm) {
@@ -197,8 +201,9 @@ bool tm_on_floor(Game *game, Tetromino *tm) {
 bool tm_spawn(Game *game) {
     game->tm_field = game->tm_next;
     game->tm_next = tm_create_rand(game);
-    game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;
-    game->floor_counter = LOCKDOWN_FRAMES;
+    game->gravity_timer = gravity(game->level);
+    game->floor_counter = FLOOR_MOVES;
+    game->floor_timer = LOCKDOWN_FRAMES;
     game->swapped = false;
     
     if (!tm_fits(game, &game->tm_field, (Vec) { 0, 0 }))
@@ -255,7 +260,7 @@ static bool tm_handle_ldd(Game *game) {
     if (tm_on_floor(game, &game->tm_field)) {
         if (game->floor_counter != 0) {
             game->floor_counter--;
-            game->gravity_timer = LOCKDOWN_FRAMES;
+            game->floor_timer = LOCKDOWN_FRAMES;
         } else {
             tm_lock(game);
             return false;
@@ -271,7 +276,7 @@ static bool tmf_mv(Game *game, Direction dir) {
     tm_handle_ldd(game);
     moved = tm_mv(game, &game->tm_field, dir);
     if (moved && (dir == LEFT || dir == RIGHT) && tm_on_floor(game, &game->tm_field))
-        game->gravity_timer = LOCKDOWN_FRAMES;
+        game->floor_timer = LOCKDOWN_FRAMES;
 
     return moved;
 }
@@ -414,8 +419,10 @@ bool tick(Game *game, u16 ch) {
     }
 
     // resets floor counter when above it
-    if (!tm_on_floor(game, &game->tm_field))
-        game->floor_counter = FLOOR_MOVES; 
+    if (!tm_on_floor(game, &game->tm_field)) {
+        game->floor_counter = FLOOR_MOVES;
+        game->floor_timer = LOCKDOWN_FRAMES;
+    }
 
     // Input handling
     switch (ch) {
@@ -434,13 +441,18 @@ bool tick(Game *game, u16 ch) {
             } break;
     }
 
-    // Setting the correct gravity timer if a tetromino just fell
-    if (game->gravity_acted && tm_on_floor(game, &game->tm_field))
-        game->gravity_timer = LOCKDOWN_FRAMES; 
+    if (tm_on_floor(game, &game->tm_field)) {
+        game->floor_timer--;
+        game->gravity_timer = gravity(game->level); 
+    }
+
+    if (game->floor_timer == 0) {
+        tm_lock(game);
+    }
 
     // Handling gravity
     if (game->gravity_timer == 0) {
-        game->gravity_timer = game->level < GRAVITY_ARR_SIZE ? GRAVITY[game->level] : 1;
+        game->gravity_timer = gravity(game->level);
         game->gravity_acted = true;
         if (!tmf_mv(game, DOWN))
             tm_lock(game);
