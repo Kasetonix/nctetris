@@ -1,8 +1,5 @@
-# executables
-# (exclude everything except files containing a dot or ending in a slash)
 *
 !*.*
 !*/
-
-# Include Makefiles
+*.o 
 !Makefile
