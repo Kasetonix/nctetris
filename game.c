@@ -406,7 +406,6 @@ static void hard_drop(Game *game) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, u16 ch) {
-    // entry delay
     if (game->entry_delay > 1) {
         game->entry_delay--;
         return true;
@@ -418,7 +417,6 @@ bool tick(Game *game, u16 ch) {
         }
     }
 
-    // resets floor counter when above it
     if (!tm_on_floor(game, &game->tm_field)) {
         game->floor_counter = FLOOR_MOVES;
         game->floor_timer = LOCKDOWN_FRAMES;
@@ -441,13 +439,13 @@ bool tick(Game *game, u16 ch) {
             } break;
     }
 
+    if (game->floor_timer == 0) {
+        tm_lock(game);
+    }
+
     if (tm_on_floor(game, &game->tm_field)) {
         game->floor_timer--;
         game->gravity_timer = gravity(game->level); 
-    }
-
-    if (game->floor_timer == 0) {
-        tm_lock(game);
     }
 
     // Handling gravity

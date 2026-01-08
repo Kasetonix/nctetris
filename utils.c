@@ -24,7 +24,6 @@ void init_ncurses() {
 WINDOW *create_win(u16 y, u16 x, u16 height, u16 width) {
     WINDOW *win;
     win = newwin(height, width, y, x);
-    wrefresh(win);
     return win;
 }
 
@@ -32,7 +31,7 @@ void border_draw(WINDOW *win, char *title) {
     box(win, 0, 0);
     if (title[0] != '\0') // draw title if not empty
         mvwprintw(win, 0, 1, "|%s|", title);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 // gets the dimensions of stdscr

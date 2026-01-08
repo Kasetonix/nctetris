@@ -72,8 +72,14 @@ int main() {
         // Don't draw anything when new tetromino is set to enter
         if (game.entry_delay == 0 || game.entry_delay == ENTRY_DELAY) {
             // Clearing the windows
-            for (u8 w = 0; w < WINDOW_NUM; w++)
+            for (u8 w = 0; w < WINDOW_NUM - 2; w++)
                 werase(win[w]);
+            // Borders
+            border_draw(win[WIN_FIELD], WINT_FIELD);
+            border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
+            border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
+            border_draw(win[WIN_SCORE], WINT_SCORE);
+            border_draw(win[WIN_LEVEL], WINT_LEVEL);
 
             // Drawing
             field_draw(win[WIN_FIELD], game.block_size, &game);
@@ -89,12 +95,6 @@ int main() {
             }
         }
 
-        // Borders
-        border_draw(win[WIN_FIELD], WINT_FIELD);
-        border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
-        border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
-        border_draw(win[WIN_SCORE], WINT_SCORE);
-        border_draw(win[WIN_LEVEL], WINT_LEVEL);
 
         doupdate();
         ch = getch();
