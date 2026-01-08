@@ -53,13 +53,13 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
 // Gravity level depending on game level
 const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 //   0   1   2   3   4   5   6   7   8   9
-    24, 22, 19, 17, 14, 12,  9,  7,  4,  3,
+    24, 22, 19, 17, 14, 12,  9,  7,  6,  5,
 //  10  11  12  13  14  15  16  17  18  19  
-     3,  3,  3,  2,  2,  2,  2,  2,  2,  2
+     5,  4,  4,  3,  3,  3,  2,  2,  2,  2
 };
 
 inline static u8 gravity(u8 level) {
-    return level < GRAVITY_ARR_SIZE ? GRAVITY[level] : 2;
+    return level < GRAVITY_ARR_SIZE ? GRAVITY[level] : 1;
 }
 
 // Calculates the bounding box for tetrominoes
