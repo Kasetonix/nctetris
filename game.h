@@ -67,8 +67,9 @@ typedef struct Tetromino {
 
 typedef struct Game {
     u32 score;
-    u8 level;
     u32 lines_cleared;
+    u8 level;
+    i8 combo;
     u8 bag[BAG_SIZE];
     u8 bag_index;
     Tetromino tm_field;

@@ -59,7 +59,7 @@ const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 };
 
 inline static u8 gravity(u8 level) {
-    return level < GRAVITY_ARR_SIZE ? GRAVITY[level] : 1;
+    return level <= GRAVITY_ARR_SIZE ? GRAVITY[level-1] : 1;
 }
 
 // Calculates the bounding box for tetrominoes
@@ -354,6 +354,10 @@ static void remove_line(Game *game, u8 removed_line) {
 // Awards points based on how many lines were cleared
 static void award_points(Game *game, u8 lines_cleared) {
     u16 multiplier = 0;
+
+    if (lines_cleared == 0)
+        return;
+
     // Lowest line being empty means that the whole field is
     // empty - perfect clear
     if (!is_line_full(game, FIELD_Y - 1)) {
@@ -372,7 +376,9 @@ static void award_points(Game *game, u8 lines_cleared) {
         }
     }
 
-    game->score += multiplier * (game->level + 1);
+    game->score += multiplier * game->level;
+    if (game->combo > 0)
+        game->score += 50 * game->combo * game->level;
 }
 
 // Clears all full lines and awards points
@@ -390,7 +396,7 @@ static void clear_lines(Game *game) {
     }
 
     award_points(game, lines_cleared);
-    game->level = game->lines_cleared / LINES_PER_LEVEL;
+    game->level = game->lines_cleared / LINES_PER_LEVEL + 1;
     game->lines_cleared += lines_cleared;
 }
 

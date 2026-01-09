@@ -25,8 +25,9 @@ int main() {
 
     Game game = {
         .score = 0,
-        .level = 0,
         .lines_cleared = 0,
+        .level = 1,
+        .combo = -1,
         .bag = { 0, 1, 2, 3, 4, 5, 6 },
         .bag_index = 0,
         .swapped = false,
