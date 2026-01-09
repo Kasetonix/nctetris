@@ -1,3 +1,8 @@
+#include <curses.h>
+#include <stdint.h>
+#include <unistd.h>
+
+#include "draw.h"
 #include "utils.h"
 #include "game.h"
 
@@ -87,4 +92,44 @@ void print_score(WINDOW *w_score, u32 score) {
 void print_level(WINDOW *w_level, u8 level) {
     mvwprintw(w_level, BORDER_THICKNESS, BORDER_THICKNESS, "%hi", level);
     wnoutrefresh(w_level);
+}
+
+// Prints the pause screen
+void print_pause(WINDOW *win, Game *game) {
+    move(BORDER_THICKNESS, BORDER_THICKNESS);
+    for (u8 y = 0; y < (FIELD_Y - FIELD_UM) * game->block_size.y; y++) {
+        for (u8 x = 0; x < FIELD_X * game->block_size.x; x++)
+            addch(PAUSE_CHAR);
+        move(BORDER_THICKNESS + (y + 1), BORDER_THICKNESS);
+    }
+
+    border_draw(win, "PAUSED");
+}
+
+// Pauses the game
+bool pause_game(WINDOW *w_field, Game *game, i16 *ch) {
+    print_pause(w_field, game);
+
+    do {
+        usleep(FRAMETIME_US);
+        *ch = getch();
+        if (*ch == CH_QUIT)
+            return false;
+    } while(*ch != CH_PAUSE); 
+
+    // Redraw field for a second
+    werase(w_field);
+    field_draw(w_field, game->block_size, game);
+    tm_draw_ghost(w_field, game->block_size, game, &game->tm_field);
+    tm_draw(w_field, game->block_size, &game->tm_field, false);
+    border_draw(w_field, WINT_FIELD_PAUSED);
+    doupdate();
+    sleep(SECONDS_AFTER_PAUSE);
+
+    // Emptying the input queue
+    do {
+        *ch = getch();
+    } while (*ch != ERR);
+
+    return true;
 }

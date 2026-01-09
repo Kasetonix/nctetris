@@ -12,7 +12,7 @@
 
 int main() {
     bool run = true;
-    u16 ch;
+    i16 ch;
     u64 frame = 0;
     Windim scrdim;
     time_t c_time;
@@ -34,19 +34,20 @@ int main() {
         .entry_delay = 0,
         .gravity_acted = false,
         .paused = false,
-        .block_size = { 1, 2 }
     };
-
-    scrdim = get_scrdim();
-    // Scaling the windows if there is enough space
-    if (scrdim.cols >= 62 && scrdim.rows >= 42)
-        game.block_size = (Vec) { 2, 4 };
 
     for (u8 y = 0; y < FIELD_Y; y++) {
         for (u8 x = 0; x < FIELD_X; x++) {
             game.field[y][x] = BLACK;
         }
     }
+
+    scrdim = get_scrdim();
+    // Scaling the windows if there is enough space
+    if (scrdim.cols >= 62 && scrdim.rows >= 42)
+        game.block_size = (Vec) { 2, 4 };
+    else
+        game.block_size = (Vec) { 1, 2 };
 
     game.tm_next = tm_create_rand(&game);
     game.tm_hold = tm_create_rand(&game);
@@ -100,9 +101,9 @@ int main() {
         doupdate();
         ch = getch();
 
-        if (ch == CH_PAUSE) {
-
-        }
+        if (ch == CH_PAUSE)
+            if (!pause_game(win[WIN_FIELD], &game, &ch))
+                run = !run;
     }
 
     endwin();

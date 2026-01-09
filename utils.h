@@ -4,17 +4,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#define WINDOW_NUM 5
-#define MAX_TITLE_LEN 32
-
-#define EMPTY_CHAR ' '
-
-#define WINT_FIELD ""
-#define WINT_HOLDTM "HOLD"
-#define WINT_NEXTTM "NEXT"
-#define WINT_SCORE "SCORE"
-#define WINT_LEVEL "LEVEL"
-
 // basic variables
 typedef uint8_t u8;
 typedef uint16_t u16;
