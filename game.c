@@ -355,9 +355,6 @@ static void remove_line(Game *game, u8 removed_line) {
 static void award_points(Game *game, u8 lines_cleared) {
     u16 multiplier = 0;
 
-    if (lines_cleared == 0)
-        return;
-
     // Lowest line being empty means that the whole field is
     // empty - perfect clear
     if (!is_line_full(game, FIELD_Y - 1)) {
@@ -395,6 +392,11 @@ static void clear_lines(Game *game) {
         }
     }
 
+    if (lines_cleared == 0) {
+        game->combo = -1;
+        return;
+    }
+
     award_points(game, lines_cleared);
     game->lines_cleared += lines_cleared;
     game->level = game->lines_cleared / LINES_PER_LEVEL + 1;
@@ -411,7 +413,7 @@ static void hard_drop(Game *game) {
 }
 
 // Performs the game logic in a given frame
-bool tick(Game *game, u16 ch) {
+bool tick(Game *game, i16 ch) {
     if (game->entry_delay > 1) {
         game->entry_delay--;
         return true;

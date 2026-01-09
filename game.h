@@ -98,4 +98,4 @@ Tetromino tm_create_rand(Game *game);
 bool tm_fits(Game *game, Tetromino *tm, Vec offset);
 bool tm_on_floor(Game *game, Tetromino *tm);
 bool tm_spawn(Game *game);
-bool tick(Game *game, u16 ch);
+bool tick(Game *game, i16 ch);
