@@ -74,12 +74,6 @@ int main() {
             // Clearing the windows
             for (u8 w = 0; w < WINDOW_NUM - 2; w++)
                 werase(win[w]);
-            // Borders
-            border_draw(win[WIN_FIELD], WINT_FIELD);
-            border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
-            border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
-            border_draw(win[WIN_SCORE], WINT_SCORE);
-            border_draw(win[WIN_LEVEL], WINT_LEVEL);
 
             // Drawing
             field_draw(win[WIN_FIELD], game.block_size, &game);
@@ -93,8 +87,14 @@ int main() {
                 tm_draw_ghost(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
                 tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
             }
-        }
 
+            // Borders
+            border_draw(win[WIN_FIELD], WINT_FIELD);
+            border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
+            border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
+            border_draw(win[WIN_SCORE], WINT_SCORE);
+            border_draw(win[WIN_LEVEL], WINT_LEVEL);
+        }
 
         doupdate();
         ch = getch();
