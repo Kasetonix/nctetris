@@ -396,8 +396,8 @@ static void clear_lines(Game *game) {
     }
 
     award_points(game, lines_cleared);
-    game->level = game->lines_cleared / LINES_PER_LEVEL + 1;
     game->lines_cleared += lines_cleared;
+    game->level = game->lines_cleared / LINES_PER_LEVEL + 1;
 }
 
 // Drops the field tetromino to the ground and awards points
