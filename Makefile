@@ -1,8 +1,13 @@
-OBJ = main.o game.o draw.o utils.o
+SRC = main.c game.c draw.c utils.c
+OBJ = ${SRC:.c=.o}
 LIBS = -lncurses
-FLAGS = -std=c99
+FLAGS = -std=gnu99
+
+.c.o:
+	${CC} -c ${FLAGS} $< ${LIBS}
+
 tetris: ${OBJ}
-	${CC} ${FLAGS} -o $@ ${OBJ} ${LIBS}
+	${CC} ${FLAGS} ${OBJ} ${LIBS} -o $@
 
 clean: tetris 
 	rm -f ${OBJ}
