@@ -10,8 +10,8 @@
 #define WINT_FIELD_PAUSED "PAUSED"
 #define WINT_HOLDTM "HOLD"
 #define WINT_NEXTTM "NEXT"
-#define WINT_SCORE "SCORE"
 #define WINT_LEVEL "LEVEL"
+#define WINT_SCORE "SCORE"
 
 #define SECONDS_AFTER_PAUSE 1 
 

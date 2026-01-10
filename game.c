@@ -58,6 +58,39 @@ const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
      5,  4,  4,  3,  3,  3,  2,  2,  2,  2
 };
 
+// Wall kick offset array for Z, S, L, J and T Tetrominos
+const Vec WALL_KICK[TM_ROT_DIRS][TM_ORIENT][WK_TESTS] = {
+    { // Clockwise 
+        { { 0,-1}, { 1,-1}, {-2, 0}, {-2,-1} }, // 3 -> 0
+        { { 0 -1}, {-1,-1}, { 2, 0}, { 2,-1} }, // 0 -> 1
+        { { 0, 1}, { 1, 1}, {-2, 0}, {-2, 1} }, // 1 -> 2
+        { { 0, 1}, {-1, 1}, { 2, 0}, { 2, 1} }, // 2 -> 3
+    },
+    { // Counter-Clockwise
+        { { 0, 1}, { 1, 1}, {-2, 0}, {-2, 1} }, // 1 -> 0
+        { { 0,-1}, {-1,-1}, { 2, 0}, { 2,-1} }, // 2 -> 1
+        { { 0,-1}, { 1,-1}, {-2, 0}, {-2,-1} }, // 3 -> 2
+        { { 0, 1}, {-1, 1}, { 2, 0}, { 2, 1} }, // 0 -> 3
+    }
+};
+
+// Wall kick offset array for I Tetrominos
+const Vec WALL_KICK_I[TM_ROT_DIRS][TM_ORIENT][WK_TESTS] = {
+    { // Clockwise 
+        { { 0, 1}, { 0,-2}, { 2, 1}, {-1,-2} }, // 3 -> 0
+        { { 0,-2}, { 0, 1}, { 1,-2}, {-2, 1} }, // 0 -> 1
+        { { 0,-1}, { 0, 2}, {-2,-1}, { 1, 2} }, // 1 -> 2
+        { { 0, 2}, { 0,-1}, {-1, 2}, { 2,-1} }, // 2 -> 3
+    },
+    { // Counter-Clockwise
+        { { 0, 2}, { 0,-1}, {-1, 2}, { 2,-1} }, // 1 -> 0
+        { { 0, 1}, { 0,-2}, { 2, 1}, {-1,-2} }, // 2 -> 1
+        { { 0,-2}, { 0, 1}, { 1,-2}, {-2, 1} }, // 3 -> 2
+        { { 0,-1}, { 0, 2}, {-2,-1}, { 1, 2} }, // 0 -> 3
+    }
+};
+
+// Returns a correct gravity value for a level
 inline static u8 gravity(u8 level) {
     return level <= GRAVITY_ARR_SIZE ? GRAVITY[level-1] : 1;
 }
@@ -161,24 +194,12 @@ static Tetromino tm_rotated(Game *game, Tetromino *tm, bool clockwise) {
 
 // Checks whether a tetromino fits in a given position
 bool tm_fits(Game *game, Tetromino *tm, Vec offset) {
-    u8 tm_min_x = TM_SIZE - 1, tm_max_x = 0, tm_min_y = TM_SIZE - 1, tm_max_y = 0;
     Vec moved_block_pos;
 
-    for (u8 i = 0; i < TM_SIZE; i++) {
-        if (tm->block[i].x > tm_max_x)
-            tm_max_x = tm->block[i].x;
-        if (tm->block[i].x < tm_min_x)
-            tm_min_x = tm->block[i].x;
-        if (tm->block[i].y > tm_max_y)
-            tm_max_y = tm->block[i].y;
-        if (tm->block[i].y < tm_min_y)
-            tm_min_y = tm->block[i].y;
-    }
-
-    if (tm->pos.x + offset.x + tm_min_x < 0 ||
-        tm->pos.y + offset.y + tm_min_y < 0 ||
-        tm->pos.x + offset.x + tm_max_x >= FIELD_X ||
-        tm->pos.y + offset.y + tm_max_y >= FIELD_Y )
+    if (tm->pos.x + offset.x + tm->bbox.left < 0 ||
+        tm->pos.y + offset.y + tm->bbox.top < 0 ||
+        tm->pos.x + offset.x + tm->bbox.right >= FIELD_X ||
+        tm->pos.y + offset.y + tm->bbox.bottom >= FIELD_Y )
         return false;
 
     for (u8 i = 0; i < TM_SIZE; i++) {
@@ -306,23 +327,34 @@ static void tm_hold(Game *game) {
     game->swapped = true;
 }
 
+// Attempts wall kicks and returns true on fit
+static bool wall_kick(Game *game, Tetromino *tm, bool clockwise, const Vec (*wka)[TM_ROT_DIRS][TM_ORIENT][WK_TESTS]) {
+    Vec offset;
+    for (u8 i = 0; i < WK_TESTS; i++) {
+        offset = *wka[clockwise? 0 : 1][tm->orientation][i];
+        if (tm_fits(game, tm, offset)) {
+            tm->pos.y += offset.y;
+            tm->pos.x += offset.x;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Rotates the field tetromino clockwise
 static void tm_rotate(Game *game, bool clockwise) {
     tm_handle_ldd(game);
     if (game->tm_field.type == TM_O) {
-        game->tm_field.orientation++;
+        game->tm_field.orientation = (game->tm_field.orientation + 1) % TM_ORIENT;
         return;
     }
 
     Tetromino tm_tmp = tm_rotated(game, &game->tm_field, clockwise);
-
-    if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 })) {
+    if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 }))
         game->tm_field = tm_tmp;
-    } else if (tm_mv(game, &tm_tmp, LEFT)) {
+    else if (wall_kick(game, &tm_tmp, clockwise, tm_tmp.type == TM_I? &WALL_KICK_I : &WALL_KICK))
         game->tm_field = tm_tmp;
-    } else if (tm_mv(game, &tm_tmp, RIGHT)) {
-        game->tm_field = tm_tmp;
-    }
 }
 
 // Checks if a line on a field is full

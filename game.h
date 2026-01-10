@@ -6,10 +6,15 @@
 #define FRAMERATE 30
 #define FRAMETIME (1.0 / FRAMERATE)
 #define FRAMETIME_US (FRAMETIME * 1e6)
+#define LOCKDOWN_FRAMES (FRAMERATE / 2)
+#define BLINK_FRAMES 5
+#define ENTRY_DELAY 3
+#define FLOOR_MOVES 15
 
 #define TM_SIZE 4
 #define TM_NUM 7
 #define TM_ORIENT 4
+#define TM_ROT_DIRS 2
 
 #define WK_TESTS 4
 
@@ -28,10 +33,6 @@
 #define DRAW_CHAR ' '
 #define GHOST_CHAR '*'
 
-#define FLOOR_MOVES 15
-#define LOCKDOWN_FRAMES (FRAMERATE / 2)
-#define BLINK_FRAMES 5
-#define ENTRY_DELAY 3
 #define LINES_PER_LEVEL 10
 
 #define CH_MV_LEFT KEY_LEFT
