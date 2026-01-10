@@ -1,13 +1,14 @@
+CSTD = gnu99
 SRC = main.c game.c draw.c utils.c
 OBJ = ${SRC:.c=.o}
 LIBS = -lncurses
-FLAGS = -std=gnu99
+CFLAGS = -std=${CSTD}
 
 .c.o:
-	${CC} -c ${FLAGS} $< ${LIBS}
+	${CC} -c ${CFLAGS} $<
 
 tetris: ${OBJ}
-	${CC} ${FLAGS} ${OBJ} ${LIBS} -o $@
+	${CC} ${OBJ} ${LIBS} -o $@
 
 clean: tetris 
 	rm -f ${OBJ}
