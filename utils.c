@@ -1,7 +1,9 @@
+#include <bits/time.h>
 #include <curses.h>
 #include <locale.h>
 #include <time.h>
 #include "utils.h"
+#include "game.h"
 
 // ncurses
 
@@ -41,12 +43,23 @@ inline Windim get_scrdim() {
 
 // general
 
-// calculates the time elapsed
-inline f32 time_since(clock_t time) {
-    return (clock() - time * 1.0) / CLOCKS_PER_SEC;
+struct timespec ns_to_timespec(f64 time) {
+    struct timespec time_ts;
+    time_ts.tv_sec = (u64) time;
+    time_ts.tv_nsec = (__time_t) ((time - time_ts.tv_sec) * 1.0e9);
+    return time_ts;
 }
 
-// Converts seconds to microseconds
-inline u64 us(f32 time) {
-    return (u64) time * 1000000L;
+struct timespec time_to_sleep(struct timespec time) {
+    struct timespec time_now, sleep_ts, frametime;
+    clock_gettime(CLOCK_REALTIME, &time_now);
+    frametime = ns_to_timespec(FRAMETIME);
+    sleep_ts.tv_sec  = frametime.tv_sec  - (time_now.tv_sec  - time.tv_sec);
+    sleep_ts.tv_nsec = frametime.tv_nsec - (time_now.tv_nsec - time.tv_nsec);
+    if (sleep_ts.tv_nsec <= 0) {
+        sleep_ts.tv_sec--;
+        sleep_ts.tv_nsec += 1000000000;
+    }
+
+    return sleep_ts;
 }

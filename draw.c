@@ -110,8 +110,8 @@ void print_pause(WINDOW *win, Game *game) {
 bool pause_game(WINDOW *w_field, Game *game, i16 *ch) {
     print_pause(w_field, game);
 
+    timeout(-1); // wait indefinitely for input
     do {
-        usleep(FRAMETIME_US);
         *ch = getch();
         if (*ch == CH_QUIT)
             return false;
@@ -124,6 +124,8 @@ bool pause_game(WINDOW *w_field, Game *game, i16 *ch) {
     tm_draw(w_field, game->block_size, &game->tm_field, false);
     border_draw(w_field, WINT_FIELD_PAUSED);
     doupdate();
+
+    timeout(0); // don't wait for input
     sleep(SECONDS_AFTER_PAUSE);
 
     // Emptying the input queue

@@ -4,8 +4,7 @@
 #include "utils.h"
 
 #define FRAMERATE 30
-#define FRAMETIME (1.0 / FRAMERATE)
-#define FRAMETIME_US (FRAMETIME * 1e6)
+#define FRAMETIME ((f64) (1.0 / FRAMERATE))
 #define LOCKDOWN_FRAMES (FRAMERATE / 2)
 #define BLINK_FRAMES 5
 #define ENTRY_DELAY 3

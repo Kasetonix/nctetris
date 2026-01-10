@@ -22,7 +22,7 @@ typedef struct Windim {
 } Windim;
 
 typedef enum {
-    WIN_FIELD, WIN_HOLDTM, WIN_NEXTTM, WIN_SCORE, WIN_LEVEL
+    WIN_FIELD, WIN_HOLDTM, WIN_NEXTTM, WIN_SCORE, WIN_LEVEL, WIN_DEBUG
 } WindowID;
 
 typedef enum {
@@ -36,5 +36,5 @@ void border_draw(WINDOW *win, char *title);
 Windim get_scrdim();
 
 // general
-f32 time_since(clock_t clock);
-u64 us(f32 time);
+struct timespec ns_to_timespec(f64 time);
+struct timespec time_to_sleep(struct timespec time);

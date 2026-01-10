@@ -1,3 +1,4 @@
+#include <bits/time.h>
 #include <curses.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@ int main() {
     i16 ch;
     u64 frame = 0;
     Windim scrdim;
-    time_t c_time;
+    struct timespec timestamp, sleep_time;
 
     WINDOW *win[WINDOW_NUM];
 
@@ -60,13 +61,8 @@ int main() {
     win[WIN_SCORE]  = create_win(WINLOC_SCORE_Y, WINLOC_SCORE_X, WINDIM_SCORE_Y, WINDIM_SCORE_X);
     win[WIN_LEVEL]  = create_win(WINLOC_LEVEL_Y, WINLOC_LEVEL_X, WINDIM_LEVEL_Y, WINDIM_LEVEL_X);
 
-    c_time = clock();
-
+    clock_gettime(CLOCK_REALTIME, &timestamp);
     while (run) {
-        usleep(FRAMETIME_US - us(time_since(c_time)));
-
-        frame++;
-        c_time = clock();
 
         if (!tick(&game, ch))
             run = !run;
@@ -104,6 +100,11 @@ int main() {
         if (ch == CH_PAUSE)
             if (!pause_game(win[WIN_FIELD], &game, &ch))
                 run = !run;
+
+        sleep_time = time_to_sleep(timestamp);
+        nanosleep(&sleep_time, NULL);
+        clock_gettime(CLOCK_REALTIME, &timestamp);
+        frame++;
     }
 
     endwin();
