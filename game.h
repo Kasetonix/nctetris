@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include "utils.h"
 
-#define FRAMERATE 30
+#define FRAMERATE 60
 #define FRAMETIME ((f64) (1.0 / FRAMERATE))
 #define LOCKDOWN_FRAMES (FRAMERATE / 2)
-#define BLINK_FRAMES 5
-#define ENTRY_DELAY 3
+#define BLINK_FRAMES (FRAMERATE / 6)
+#define ENTRY_DELAY (FRAMERATE / 10)
 #define FLOOR_MOVES 15
 
 #define TM_SIZE 4

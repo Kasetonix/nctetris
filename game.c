@@ -50,12 +50,12 @@ const Vec TM_BLOCKS[TM_NUM][TM_ORIENT][TM_SIZE] = { // relative (y, x) coordinat
     }, 
 };
 
-// Gravity level depending on game level
+// Gravity level depending on game level (for 60FPS)
 const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 //   0   1   2   3   4   5   6   7   8   9
-    24, 22, 19, 17, 14, 12,  9,  7,  6,  5,
+    48, 44, 38, 34, 28, 24, 18, 14, 12, 10,
 //  10  11  12  13  14  15  16  17  18  19  
-     5,  4,  4,  3,  3,  3,  2,  2,  2,  2
+    10,  8,  8,  6,  6,  6,  4,  4,  4,  4
 };
 
 // Wall kick offset array for Z, S, L, J and T Tetrominos
@@ -92,7 +92,7 @@ const Vec WALL_KICK_I[TM_ROT_DIRS][TM_ORIENT][WK_TESTS] = {
 
 // Returns a correct gravity value for a level
 inline static u8 gravity(u8 level) {
-    return level <= GRAVITY_ARR_SIZE ? GRAVITY[level-1] : 1;
+    return (u8) ((level <= GRAVITY_ARR_SIZE ? GRAVITY[level-1] : 2) * (FRAMERATE / (60.0)));
 }
 
 // Calculates the bounding box for tetrominoes

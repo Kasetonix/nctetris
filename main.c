@@ -63,7 +63,6 @@ int main() {
 
     clock_gettime(CLOCK_REALTIME, &timestamp);
     while (run) {
-
         if (!tick(&game, ch))
             run = !run;
 
