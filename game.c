@@ -222,7 +222,7 @@ bool tm_on_floor(Game *game, Tetromino *tm) {
 bool tm_spawn(Game *game) {
     game->tm_field = game->tm_next;
     game->tm_next = tm_create_rand(game);
-    game->gravity_timer = gravity(game->level);
+    game->gravity_timer = 0;
     game->floor_counter = FLOOR_MOVES;
     game->floor_timer = LOCKDOWN_FRAMES;
     game->swapped = false;
@@ -446,6 +446,7 @@ static void hard_drop(Game *game) {
 
 // Performs the game logic in a given frame
 bool tick(Game *game, i16 ch) {
+    // handling the entry delay
     if (game->entry_delay > 1) {
         game->entry_delay--;
         return true;
@@ -457,12 +458,13 @@ bool tick(Game *game, i16 ch) {
         }
     }
 
+    // resetting the floor vars when in the air
     if (!tm_on_floor(game, &game->tm_field)) {
         game->floor_counter = FLOOR_MOVES;
         game->floor_timer = LOCKDOWN_FRAMES;
     }
 
-    // Input handling
+    // input handling
     switch (ch) {
         case CH_MV_LEFT:    tmf_mv(game, LEFT); break; 
         case CH_MV_RIGHT:   tmf_mv(game, RIGHT); break;
@@ -476,19 +478,22 @@ bool tick(Game *game, i16 ch) {
             if (tmf_mv(game, DOWN)) {
                 game->score++;
                 game->gravity_acted = true;
+                game->gravity_timer = gravity(game->level);
             } break;
     }
 
-    if (game->floor_timer == 0) {
-        tm_lock(game);
-    }
-
+    // lowering the floor timer when on the floor 
     if (tm_on_floor(game, &game->tm_field)) {
         game->floor_timer--;
         game->gravity_timer = gravity(game->level); 
     }
 
-    // Handling gravity
+    // locking the piece after the floor timer runs out
+    if (game->floor_timer == 0) {
+        tm_lock(game);
+    }
+
+    // handling gravity
     if (game->gravity_timer == 0) {
         game->gravity_timer = gravity(game->level);
         game->gravity_acted = true;
@@ -497,7 +502,6 @@ bool tick(Game *game, i16 ch) {
     } else {
         game->gravity_acted = false;
     }
-
     game->gravity_timer--;
 
     // clearing lines
