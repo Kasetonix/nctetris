@@ -14,7 +14,7 @@
 #define WINT_SCORE "SCORE"
 
 #define DRAW_CHAR ' '
-#define GHOST_CHAR '*'
+#define GHOST_CHAR ACS_BOARD
 #define BLINK_INTERVAL (FRAMERATE / 6)
 #define BLINK_FRAMES (BLINK_INTERVAL / 2 + 1)
 
