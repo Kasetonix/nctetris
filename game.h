@@ -6,7 +6,6 @@
 #define FRAMERATE 60
 #define FRAMETIME ((f64) (1.0 / FRAMERATE))
 #define LOCKDOWN_FRAMES (FRAMERATE / 2)
-#define BLINK_FRAMES (FRAMERATE / 6)
 #define ENTRY_DELAY (FRAMERATE / 10)
 #define FLOOR_MOVES 15
 
@@ -24,14 +23,7 @@
 #define FIELD_Y (20 + FIELD_UM)
 #define BORDER_THICKNESS 1
 
-#define BLOCK_X 4
-#define BLOCK_Y 2
-
 #define GRAVITY_ARR_SIZE 20
-
-#define DRAW_CHAR ' '
-#define GHOST_CHAR '*'
-
 #define LINES_PER_LEVEL 10
 
 #define CH_MV_LEFT KEY_LEFT

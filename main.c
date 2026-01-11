@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,7 +14,7 @@
 int main() {
     bool run = true;
     i16 ch;
-    u64 frame = 0;
+    u8 blink_frame;
     Windim scrdim;
     struct timespec timestamp, sleep_time;
 
@@ -65,36 +66,9 @@ int main() {
         if (!tick(&game, ch))
             run = !run;
 
-        // Don't draw anything when new tetromino is set to enter
-        if (game.entry_delay == 0 || game.entry_delay == ENTRY_DELAY) {
-            // Clearing the windows
-            for (u8 w = 0; w < WINDOW_NUM - 2; w++)
-                werase(win[w]);
+        draw_game(&win[0], &game, &blink_frame);
 
-            // Drawing
-            field_draw(win[WIN_FIELD], game.block_size, &game);
-            tm_nh_draw(win[WIN_HOLDTM], game.block_size, &game.tm_hold);
-            tm_nh_draw(win[WIN_NEXTTM], game.block_size, &game.tm_next);
-            print_score(win[WIN_SCORE], game.score);
-            print_level(win[WIN_LEVEL], game.level);
-
-            // Blink when on the floor
-            if (!(tm_on_floor(&game, &game.tm_field) && frame % BLINK_FRAMES == 0)) {
-                tm_draw_ghost(win[WIN_FIELD], game.block_size, &game, &game.tm_field);
-                tm_draw(win[WIN_FIELD], game.block_size, &game.tm_field, false);
-            }
-
-            // Borders
-            border_draw(win[WIN_FIELD], WINT_FIELD);
-            border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
-            border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
-            border_draw(win[WIN_SCORE], WINT_SCORE);
-            border_draw(win[WIN_LEVEL], WINT_LEVEL);
-        }
-
-        doupdate();
         ch = getch();
-
         if (ch == CH_PAUSE)
             if (!pause_game(win[WIN_FIELD], &game, &ch))
                 run = !run;
@@ -102,7 +76,6 @@ int main() {
         sleep_time = time_to_sleep(timestamp);
         nanosleep(&sleep_time, NULL);
         clock_gettime(CLOCK_REALTIME, &timestamp);
-        frame++;
     }
 
     endwin();

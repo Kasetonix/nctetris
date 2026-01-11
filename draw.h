@@ -13,6 +13,11 @@
 #define WINT_LEVEL "LEVEL"
 #define WINT_SCORE "SCORE"
 
+#define DRAW_CHAR ' '
+#define GHOST_CHAR '*'
+#define BLINK_INTERVAL (FRAMERATE / 6)
+#define BLINK_FRAMES (BLINK_INTERVAL / 2 + 1)
+
 #define SECONDS_AFTER_PAUSE 1 
 
 void tm_draw(WINDOW *win, Vec block_size, Tetromino *tm, bool ghost);
@@ -23,3 +28,4 @@ void print_score(WINDOW *w_score, u32 score);
 void print_level(WINDOW *w_level, u8 level);
 void print_pause(WINDOW *win, Game *game);
 bool pause_game(WINDOW *w_field, Game *game, i16 *ch);
+void draw_game(WINDOW *win[WINDOW_NUM], Game *game, u8 *blink_frame);

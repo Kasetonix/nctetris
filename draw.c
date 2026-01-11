@@ -135,3 +135,47 @@ bool pause_game(WINDOW *w_field, Game *game, i16 *ch) {
 
     return true;
 }
+
+// Draws the game to the stdscr
+void draw_game(WINDOW *win[WINDOW_NUM], Game *game, u8 *blink_frame) {
+    // Don't draw anything when new tetromino is set to enter
+    if (game->entry_delay == 0 || game->entry_delay == ENTRY_DELAY) {
+        // Clearing the windows 
+        // (besides the score and level, which don't have to ever be redrawn)
+        for (u8 w = 0; w < WINDOW_NUM - 2; w++)
+            werase(win[w]);
+
+        // Drawing
+        field_draw(win[WIN_FIELD], game->block_size, game);
+        tm_nh_draw(win[WIN_HOLDTM], game->block_size, &game->tm_hold);
+        tm_nh_draw(win[WIN_NEXTTM], game->block_size, &game->tm_next);
+        print_score(win[WIN_SCORE], game->score);
+        print_level(win[WIN_LEVEL], game->level);
+
+        if (!tm_on_floor(game, &game->tm_field)) {
+            tm_draw_ghost(win[WIN_FIELD], game->block_size, game, &game->tm_field);
+            tm_draw(win[WIN_FIELD], game->block_size, &game->tm_field, false);
+            *blink_frame = UINT8_MAX;
+        } else { // Blink when on the floor
+            if (*blink_frame == UINT8_MAX) // just landed
+                *blink_frame = BLINK_FRAMES;
+            if (*blink_frame == 0)
+                *blink_frame = BLINK_INTERVAL;
+            if (*blink_frame <= BLINK_FRAMES) {
+                tm_draw_ghost(win[WIN_FIELD], game->block_size, game, &game->tm_field);
+                tm_draw(win[WIN_FIELD], game->block_size, &game->tm_field, false);
+            }
+
+            *blink_frame = *blink_frame - 1;
+        }
+
+        // Borders
+        border_draw(win[WIN_FIELD], WINT_FIELD);
+        border_draw(win[WIN_HOLDTM], WINT_HOLDTM);
+        border_draw(win[WIN_NEXTTM], WINT_NEXTTM);
+        border_draw(win[WIN_SCORE], WINT_SCORE);
+        border_draw(win[WIN_LEVEL], WINT_LEVEL);
+    }
+
+    doupdate();
+}

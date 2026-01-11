@@ -1,5 +1,5 @@
 CSTD = gnu99
-SRC = main.c game.c draw.c utils.c
+SRC = utils.c game.c draw.c main.c
 OBJ = ${SRC:.c=.o}
 LIBS = -lncurses
 CFLAGS = -std=${CSTD}
