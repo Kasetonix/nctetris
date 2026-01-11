@@ -294,10 +294,8 @@ static bool tm_handle_ldd(Game *game) {
 // Shortcut for moving the field tetromino
 static bool tmf_mv(Game *game, Direction dir) {
     bool moved;
-    tm_handle_ldd(game);
     moved = tm_mv(game, &game->tm_field, dir);
-    if (moved && (dir == LEFT || dir == RIGHT) && tm_on_floor(game, &game->tm_field))
-        game->floor_timer = LOCKDOWN_FRAMES;
+    if (moved) tm_handle_ldd(game);
 
     return moved;
 }
