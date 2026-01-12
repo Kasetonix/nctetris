@@ -225,6 +225,7 @@ bool tm_spawn(Game *game) {
     game->gravity_timer = 0;
     game->floor_counter = FLOOR_MOVES;
     game->floor_timer = LOCKDOWN_FRAMES;
+    game->on_floor = tm_on_floor(game, &game->tm_field);
     game->swapped = false;
     
     if (!tm_fits(game, &game->tm_field, (Vec) { 0, 0 }))
@@ -278,7 +279,7 @@ static void tm_lock(Game *game) {
 // Handles lock down delay for field tetromino,
 // returns false if the tetromino has been locked down
 static bool tm_handle_ldd(Game *game) {
-    if (tm_on_floor(game, &game->tm_field)) {
+    if (game->on_floor) {
         if (game->floor_counter != 0) {
             game->floor_counter--;
             game->floor_timer = LOCKDOWN_FRAMES;
@@ -293,11 +294,12 @@ static bool tm_handle_ldd(Game *game) {
 
 // Shortcut for moving the field tetromino
 static bool tmf_mv(Game *game, Direction dir) {
-    bool moved;
-    moved = tm_mv(game, &game->tm_field, dir);
-    if (moved) tm_handle_ldd(game);
-
-    return moved;
+    if (tm_mv(game, &game->tm_field, dir)) {
+        game->on_floor = tm_on_floor(game, &game->tm_field);
+        tm_handle_ldd(game);
+        return true;
+    }
+    return false;
 }
 
 // Exchanges the field tetromino with the held one
@@ -322,6 +324,7 @@ static void tm_hold(Game *game) {
 
     game->tm_hold.pos.y = 0;
     tm_center(&game->tm_hold);
+    game->on_floor = tm_on_floor(game, &game->tm_field);
     game->swapped = true;
 }
 
@@ -352,10 +355,13 @@ static void tm_rotate(Game *game, bool clockwise) {
     }
 
     Tetromino tm_tmp = tm_rotated(game, &game->tm_field, clockwise);
-    if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 }))
+    if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 })) {
         game->tm_field = tm_tmp;
-    else if (wall_kick(game, &tm_tmp, clockwise))
+        game->on_floor = tm_on_floor(game, &game->tm_field);
+    } else if (wall_kick(game, &tm_tmp, clockwise)) {
         game->tm_field = tm_tmp;
+        game->on_floor = tm_on_floor(game, &game->tm_field);
+    }
 }
 
 // Checks if a line on a field is full
@@ -460,7 +466,7 @@ bool tick(Game *game, i16 ch) {
     }
 
     // resetting the floor vars when in the air
-    if (!tm_on_floor(game, &game->tm_field)) {
+    if (!game->on_floor) {
         game->floor_counter = FLOOR_MOVES;
         game->floor_timer = LOCKDOWN_FRAMES;
     }
@@ -484,15 +490,14 @@ bool tick(Game *game, i16 ch) {
     }
 
     // lowering the floor timer when on the floor 
-    if (tm_on_floor(game, &game->tm_field)) {
+    if (game->on_floor) {
         game->floor_timer--;
         game->gravity_timer = gravity(game->level); 
     }
 
     // locking the piece after the floor timer runs out
-    if (game->floor_timer == 0) {
+    if (game->floor_timer == 0)
         tm_lock(game);
-    }
 
     // handling gravity
     if (game->gravity_timer == 0) {

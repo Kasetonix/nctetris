@@ -31,6 +31,7 @@ int main() {
         .combo = -1,
         .bag = { 0, 1, 2, 3, 4, 5, 6 },
         .bag_index = 0,
+        .on_floor = false,
         .swapped = false,
         .entry_delay = 0,
         .gravity_acted = false,

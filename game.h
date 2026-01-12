@@ -67,6 +67,7 @@ typedef struct Game {
     Tetromino tm_field;
     Tetromino tm_next;
     Tetromino tm_hold;
+    bool on_floor;
     bool swapped;
     u8 field[FIELD_Y][FIELD_X];
     u8 gravity_timer;
@@ -88,6 +89,5 @@ typedef enum Direction {
 
 Tetromino tm_create_rand(Game *game);
 bool tm_fits(Game *game, Tetromino *tm, Vec offset);
-bool tm_on_floor(Game *game, Tetromino *tm);
 bool tm_spawn(Game *game);
 bool tick(Game *game, i16 ch);

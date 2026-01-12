@@ -152,7 +152,7 @@ void draw_game(WINDOW *win[WINDOW_NUM], Game *game, u8 *blink_frame) {
         print_score(win[WIN_SCORE], game->score);
         print_level(win[WIN_LEVEL], game->level);
 
-        if (!tm_on_floor(game, &game->tm_field)) {
+        if (!game->on_floor) {
             tm_draw_ghost(win[WIN_FIELD], game->block_size, game, &game->tm_field);
             tm_draw(win[WIN_FIELD], game->block_size, &game->tm_field, false);
             *blink_frame = UINT8_MAX;
