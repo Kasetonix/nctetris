@@ -13,7 +13,7 @@
 #define WINT_LEVEL "LEVEL"
 #define WINT_SCORE "SCORE"
 
-#define DRAW_CHAR ' '
+#define DRAW_CHAR ' ' | A_REVERSE
 #define GHOST_CHAR ACS_BOARD
 #define BLINK_INTERVAL (FRAMERATE / 6)
 #define BLINK_FRAMES (BLINK_INTERVAL / 2 + 1)

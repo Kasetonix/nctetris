@@ -326,10 +326,13 @@ static void tm_hold(Game *game) {
 }
 
 // Attempts wall kicks and returns true on fit
-static bool wall_kick(Game *game, Tetromino *tm, bool clockwise, const Vec (*wka)[TM_ROT_DIRS][TM_ORIENT][WK_TESTS]) {
+static bool wall_kick(Game *game, Tetromino *tm, bool clockwise) {
     Vec offset;
+    const Vec (*wka)[TM_ROT_DIRS][TM_ORIENT][WK_TESTS];
+    wka = tm->type != TM_I? &WALL_KICK : &WALL_KICK_I;
+
     for (u8 i = 0; i < WK_TESTS; i++) {
-        offset = *wka[clockwise? 0 : 1][tm->orientation][i];
+        offset = (*wka)[clockwise? 0 : 1][tm->orientation][i];
         if (tm_fits(game, tm, offset)) {
             tm->pos.y += offset.y;
             tm->pos.x += offset.x;
@@ -351,7 +354,7 @@ static void tm_rotate(Game *game, bool clockwise) {
     Tetromino tm_tmp = tm_rotated(game, &game->tm_field, clockwise);
     if (tm_fits(game, &tm_tmp, (Vec) { 0, 0 }))
         game->tm_field = tm_tmp;
-    else if (wall_kick(game, &tm_tmp, clockwise, tm_tmp.type == TM_I? &WALL_KICK_I : &WALL_KICK))
+    else if (wall_kick(game, &tm_tmp, clockwise))
         game->tm_field = tm_tmp;
 }
 

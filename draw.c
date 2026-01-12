@@ -17,7 +17,7 @@ static void block_draw(WINDOW *win, Vec block_size, Vec pos, u8 color, bool ghos
         for (u8 y = 0; y < block_size.y; y++) {
             wmove(win, pos.y + y, pos.x);
             for (u8 x = 0; x < block_size.x; x++) {
-                waddch(win, DRAW_CHAR | A_REVERSE | COLOR_PAIR(color));
+                waddch(win, DRAW_CHAR | COLOR_PAIR(color));
             }
         }
     } else {
