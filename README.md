@@ -48,5 +48,5 @@ After compilation there should be an executable `tetris` file in the root of thi
 
 # Used resources
 - [Tetris wiki](https://tetris.wiki/), especially the [Tetris Guideline](https://tetris.wiki/Tetris_Guideline) page - for looking up specific game rules,
-- [https://tldp.org/HOWTO/NCURSES-Programming-HOWTO/](https://tldp.org/HOWTO/NCURSES-Programming-HOWTO/) by Pradeep Padala - for learning the basics of the `ncurses` library,
+- [NCURSES-Programming-HOWTO](https://tldp.org/HOWTO/NCURSES-Programming-HOWTO/) by Pradeep Padala - for learning the basics of the `ncurses` library,
 - `man` pages for various `ncurses` functions - for detailed usage of `ncurses` functions.
