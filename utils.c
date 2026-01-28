@@ -1,11 +1,8 @@
-#include <bits/time.h>
 #include <curses.h>
 #include <locale.h>
 #include <time.h>
 #include "utils.h"
 #include "game.h"
-
-// ncurses
 
 // initializes the ncurses library 
 void init_ncurses() {
@@ -29,6 +26,7 @@ WINDOW *create_win(u16 y, u16 x, u16 height, u16 width) {
     return win;
 }
 
+// draws a border around a window
 void border_draw(WINDOW *win, char *title) {
     box(win, 0, 0);
     if (title[0] != '\0') // draw title if not empty
@@ -41,8 +39,7 @@ inline Windim get_scrdim() {
     return (Windim) { (u16) getmaxy(stdscr), (u16) getmaxx(stdscr) };
 }
 
-// general
-
+// translates a float containing seconds into a timespec representation
 struct timespec ns_to_timespec(f64 time) {
     struct timespec time_ts;
     time_ts.tv_sec = (u64) time;
@@ -50,6 +47,7 @@ struct timespec ns_to_timespec(f64 time) {
     return time_ts;
 }
 
+// Calculates the time needed to sleep to achieve constant framerate
 struct timespec time_to_sleep(struct timespec time) {
     struct timespec time_now, sleep_ts, frametime;
     clock_gettime(CLOCK_REALTIME, &time_now);
