@@ -24,7 +24,7 @@ sudo yum install ncurses-devel
     make clean
     ```
 
-- Manual:
+- Manual:<br>
     Compile all of the source files to object files with `-std=c99` flag and link them with the ncurses library.
     ```bash
     for src in *.c; do cc -c -std=gnu99 "$src"; done && \
