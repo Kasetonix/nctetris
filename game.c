@@ -61,7 +61,7 @@ const u8 GRAVITY[GRAVITY_ARR_SIZE] = {
 const Vec WALL_KICK[TM_ROT_DIRS][TM_ORIENT][WK_TESTS] = {
     { // Clockwise 
         { { 0,-1}, { 1,-1}, {-2, 0}, {-2,-1} }, // 3 -> 0
-        { { 0 -1}, {-1,-1}, { 2, 0}, { 2,-1} }, // 0 -> 1
+        { { 0,-1}, {-1,-1}, { 2, 0}, { 2,-1} }, // 0 -> 1
         { { 0, 1}, { 1, 1}, {-2, 0}, {-2, 1} }, // 1 -> 2
         { { 0, 1}, {-1, 1}, { 2, 0}, { 2, 1} }, // 2 -> 3
     },
@@ -371,14 +371,6 @@ static bool is_line_full(Game *game, u8 line) {
     return true;
 }
 
-// Checks if a line on a field is empty 
-static bool is_line_empty(Game *game, u8 line) {
-    for (u8 x = 0; x < FIELD_X; x++)
-        if (game->field[line][x] != BLACK)
-            return false;
-    return true;
-}
-
 // Removes a line by moving all of the lines above one block down
 static void remove_line(Game *game, u8 removed_line) {
     for (u8 y = removed_line; y > 0; y--)
@@ -419,7 +411,6 @@ static void award_points(Game *game, u8 lines_cleared) {
 // Clears all full lines and awards points
 static void clear_lines(Game *game) {
     u8 lines_cleared = 0;
-    u8 removed_line;
 
     for (u8 line = 0; line < FIELD_Y; line++) {
         if (is_line_full(game, line)) {
