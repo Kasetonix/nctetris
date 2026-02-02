@@ -4,6 +4,11 @@ OBJ = ${SRC:.c=.o}
 LIBS = -lcurses
 CFLAGS = -std=${CSTD}
 
+all: tetris
+
+debug: CFLAGS += -Wall -Wextra -Werror -g
+debug: tetris
+
 tetris: ${OBJ}
 	${CC} ${OBJ} ${LIBS} -o $@
 
