@@ -9,6 +9,9 @@ all: tetris
 debug: CFLAGS += -Wall -Wextra -Werror -g
 debug: tetris
 
+release: CFLAGS += -O3
+release: tetris
+
 tetris: ${OBJ}
 	${CC} ${OBJ} ${LIBS} -o $@
 
