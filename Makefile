@@ -7,13 +7,14 @@ CFLAGS = -std=${CSTD}
 all: tetris
 
 debug: CFLAGS += -Wall -Wextra -Werror -g
+debug: LFLAGS += -fsanitize=address
 debug: tetris
 
 release: CFLAGS += -O3
 release: tetris
 
 tetris: ${OBJ}
-	${CC} ${OBJ} ${LIBS} -o $@
+	${CC} ${OBJ} ${LIBS} ${LFLAGS} -o $@
 
 clean: tetris 
 	rm -f ${OBJ}
